@@ -6,17 +6,16 @@
 ## 目录
 
 - `extension.json` — 清单（含两个数据绑定：随机候选表 pickTable / 函数规则表 funcLib）
-- `src/index.tsx` — 六个方法（randInt / randFloat / randPick / randBatch / calc / callFunc）
-- `src/expr.ts` — 白名单表达式 DSL（无 eval）：数字、x/y/z/w、`+ - * / ^`、括号、`sqrt/pow/floor/round/min/max/clamp`
-- `sdk/` — 本机 Studio 1.21.0 的 SDK 副本（`extension-inspector.ts` 为补全桩）
-- `dist/index.js` — 构建产物（`npm run build` 生成，勿手改）
+- `src/index.tsx` — 单一源码文件（3 个方法 + 白名单表达式 DSL 内联）
+- `sdk/` — Studio 1.21.0 的 SDK 副本（`extension-inspector.ts` 为类型补全桩）
+- `dist/` — 构建产物（`npm run build` 生成，勿手改）
 
 ## 构建（纯 tsc，无外部子进程）
 
 ```powershell
-npm run build        # tsc -p tsconfig.build.json → dist/index.js + dist/expr.js
-npx tsc --noEmit     # 类型检查
-node _test\run-tests.mjs   # 44 项（manifest 校验 + 确定性逻辑 + 性质抽样）
+npm run build              # tsc → dist/index.js（+ index.mjs 兼容副本）
+npx tsc --noEmit           # 类型检查
+node _test\run-tests.mjs   # 58 项（manifest 校验 + 确定性逻辑 + 性质抽样）
 ```
 
 ## 方法速查（3 个）
@@ -49,7 +48,7 @@ node _test\run-tests.mjs   # 44 项（manifest 校验 + 确定性逻辑 + 性质
 ## 注意事项
 
 - **outVar 是变量下拉**：结果写入变量必须先声明再选；sticky 模式必填。
-- **批量前缀是文本框**：`前缀_1..N` 运行时写入。【待实测】部分版本可能要求预声明——建议先声明 `前缀_1`（或全量），或在测试项目直接试一次确认。
+- **批量前缀是文本框**：`前缀_1..N` 运行时写入；建议先声明 `前缀_1`（或全量）。
 - **weight 列可选**：候选表不建 weight 列=均匀随机；建了但全 0/空=自动回退均匀。
 - **结果变量类型配对**：随机数→数值变量；列表随机→文本变量。
 
@@ -58,8 +57,8 @@ node _test\run-tests.mjs   # 44 项（manifest 校验 + 确定性逻辑 + 性质
 1. 导入扩展（文件夹 / zip）→ 「加入」项目
 2. 资产 → 数据集合：应自动出现「随机候选表」「函数规则表」两表
 3. 剧本插入方法块：
-   - 随机整数（fresh）→ F5 多次预览应每次不同
-   - 随机整数（sticky）→ 首次固定；SL 读档后仍固定
+   - 随机数（digits=0，fresh）→ F5 多次预览应每次不同
+   - 随机数（digits=0，sticky）→ 首次固定；SL 读档后仍固定
    - 列表随机 → 表填 3 行 label（权重 5/2/3）→ 多次运行分布近似 50/20/30
-   - 调用函数 → 规则表加一行：`clamp(round(x*y),1,100)`，x=60,y=0.5 → 结果 30
-4. If 直接比较：新 If 条件来源=「随机与计算系统 → 随机整数」返回结果
+   - 计算 → 运算=自定义函数，规则表加一行：`clamp(round(x*y),1,100)`，x=60,y=0.5 → 结果 30
+4. If 直接比较：新 If 条件来源=「随机与计算系统 → 随机数」返回结果
