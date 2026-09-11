@@ -28,7 +28,7 @@ const realRandom = Math.random;
 const setRandom = (seq) => { let i = 0; Math.random = () => (i < seq.length ? seq[i++] : 0); };
 const resetRandom = () => { Math.random = realRandom; };
 
-function makeCtx(init = {}, pickRows = [], funcRows = []) {
+function makeCtx(init = {}, pickRows = [], funcRows = [], saved = []) {
   const store = new Map(Object.entries(init));
   const table = (rows) => ({
     find: async (filter) => {
@@ -37,7 +37,9 @@ function makeCtx(init = {}, pickRows = [], funcRows = []) {
       return rows;
     },
   });
+  const saveValues = new Map([['fixedResults', structuredClone(saved)]]);
   return {
+    save: { get:k=>saveValues.get(k), set:(k,v)=>saveValues.set(k,structuredClone(v)) },
     variables: {
       get: (n) => store.get(n),
       set: (n, v) => store.set(n, v),
@@ -45,7 +47,8 @@ function makeCtx(init = {}, pickRows = [], funcRows = []) {
     database: { collection: (alias) => table(alias === 'pickTable' ? pickRows : funcRows) },
   };
 }
-const M = RandomMath;
+// Each mock context owns its slot state, as the real extension instance does.
+const M = Object.fromEntries(['rand','randPick','calc'].map(name=>[name,{run:(ctx,p)=>RandomMath[name].run.call({save:ctx.save},ctx,p)}]));
 
 // rand（整数：digits=0；小数：digits>=1）
 {
@@ -78,7 +81,7 @@ const M = RandomMath;
   ok('sticky 二次返回旧值（不再掷）', b === 1);
   const ctx2 = makeCtx({ st: 7 }); // 模拟读档恢复
   setRandom([0.5]);
-  ok('sticky 读档后仍固定旧值', M.rand.run(ctx2, { mode: 'sticky', min: 1, max: 10, digits: 0, includeMin: true, includeMax: true, outVar: 'st' }) === 7);
+  ok('sticky 显式接入旧变量结果', M.rand.run(ctx2, { mode: 'sticky', min: 1, max: 10, digits: 0, includeMin: true, includeMax: true, outVar: 'st', fixedPolicy: 'adopt' }) === 7);
 }
 // randPick 均匀 + 加权 + 池筛选（async → await）
 {
@@ -109,16 +112,16 @@ const M = RandomMath;
 }
 // rand 批量（count>1 → 前缀_1..N）
 {
-  const ctx = makeCtx();
+  const ctx = makeCtx({bx_1:0,bx_2:0,bx_3:0});
   setRandom([0, 0.5, 0.999999]);
   const n = M.rand.run(ctx, { mode: 'fresh', min: 10, max: 10, digits: 0, includeMin: true, includeMax: true, count: 3, outVar: '', prefix: 'bx' });
   ok('rand 批量返回数量', n === 3);
   ok('rand 批量全 10', ctx.variables.get('bx_1') === 10 && ctx.variables.get('bx_2') === 10 && ctx.variables.get('bx_3') === 10);
   setRandom([0]);
-  ok('rand 批量夹取 100', M.rand.run(ctx, { mode: 'fresh', min: 1, max: 2, digits: 0, includeMin: true, includeMax: true, count: 999, outVar: '', prefix: 'by' }) === 100);
+  ok('rand 批量超过 100 明确失败', M.rand.run(ctx, { mode: 'fresh', min: 1, max: 2, digits: 0, includeMin: true, includeMax: true, count: 999, outVar: '', prefix: 'by' }) === -1);
   ok('rand 批量缺前缀 → -1', M.rand.run(ctx, { mode: 'fresh', min: 1, max: 2, digits: 0, includeMin: true, includeMax: true, count: 3, outVar: '', prefix: '' }) === -1);
   const ctxS = makeCtx({ by_1: 7, by_2: 7, by_3: 7 });
-  ok('rand 批量 sticky 已存在 → 不重写', M.rand.run(ctxS, { mode: 'sticky', min: 1, max: 99, digits: 0, includeMin: true, includeMax: true, count: 3, outVar: '', prefix: 'by' }) === 3);
+  ok('rand 批量 sticky 已存在 → 不重写', M.rand.run(ctxS, { mode: 'sticky', min: 1, max: 99, digits: 0, includeMin: true, includeMax: true, count: 3, outVar: '', prefix: 'by', fixedPolicy:'adopt' }) === 3);
 }
 // calc
 {
@@ -180,11 +183,11 @@ console.log('\n== ③ 性质测试（真实随机抽样） ==');
   const dh = Math.abs(cnt['高'] - 500), dz = Math.abs(cnt['中'] - 200), dl2 = Math.abs(cnt['低'] - 300);
   ok(`加权分布 1000 次 → 高${cnt['高']} 中${cnt['中']} 低${cnt['低']}（期望 500/200/300 ±60）`, dh <= 60 && dz <= 60 && dl2 <= 60);
   // 批量一致性（sticky：值在 SL 后保持）
-  const ctxB = makeCtx();
+  const ctxB = makeCtx({q_1:0,q_2:0,q_3:0});
   setRandom([0.1, 0.2, 0.3]);
   M.rand.run(ctxB, { mode: 'sticky', min: 1, max: 9, digits: 0, includeMin: true, includeMax: true, count: 3, outVar: '', prefix: 'q' });
   const snap = [ctxB.variables.get('q_1'), ctxB.variables.get('q_2'), ctxB.variables.get('q_3')];
-  const ctxB2 = makeCtx({ q_1: snap[0], q_2: snap[1], q_3: snap[2] }); // 模拟读档
+  const ctxB2 = makeCtx({ q_1: snap[0], q_2: snap[1], q_3: snap[2] }, [], [], ctxB.save.get('fixedResults')); // 同时恢复变量与插件槽存档
   setRandom([0.9, 0.9, 0.9]);
   const n2 = M.rand.run(ctxB2, { mode: 'sticky', min: 1, max: 9, digits: 0, includeMin: true, includeMax: true, count: 3, outVar: '', prefix: 'q' });
   ok('批量 sticky 读档后保持原值', n2 === 3 && ctxB2.variables.get('q_1') === snap[0] && ctxB2.variables.get('q_2') === snap[1] && ctxB2.variables.get('q_3') === snap[2]);
@@ -219,11 +222,11 @@ console.log('\n== ③ 性质测试（真实随机抽样） ==');
   const wrows3 = [{ id: 'n1', label: 'Only', weight: '3', pool: '' }];
   const ctxC = makeCtx({}, wrows3);
   ok('权重字符串数字兼容', (await M.randPick.run(ctxC, { pool: '', field: 'label', outVar: '' })) === 'Only');
-  // 表达式错误 → 权重 0；全部无效 → 回退均匀
+  // 无效表达式必须明确失败，不静默让锁定候选入池
   const wrows4 = [{ id: 'bad', label: 'B', weight: '1 +', pool: '' }];
   const ctxD = makeCtx({}, wrows4);
   setRandom([0]);
-  ok('无效权重表达式 → 回退均匀(仍可抽中)', (await M.randPick.run(ctxD, { pool: '', field: 'label', outVar: '' })) === 'B');
+  ok('无效权重表达式 → 明确失败', (await M.randPick.run(ctxD, { pool: '', field: 'label', outVar: '' })) === '');
   // 权重调用函数表函数：高权重(x>50)=5 否则 2
   const funcRows2 = [{ name: '高权重', expr: 'x > 50 ? 5 : 2', desc: '' }];
   const wrows5 = [
