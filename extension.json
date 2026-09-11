@@ -1,16 +1,16 @@
 {
   "id": "mixing-entropy.random-math",
   "name": "随机与计算系统",
-  "description": "纯数学扩展：随机数（真/伪随机、整数/小数、批量）、加权列表抽取（多池+复合权重）、计算与自定义函数（白名单表达式 DSL）。无网络、无原生依赖。",
+  "description": "纯数学扩展：等概率整数/小数与批量随机、随存档固定结果、多池加权抽取与概率检查、白名单表达式和嵌套函数。无网络、无原生依赖。",
   "icon": "assets/cover.png",
   "author": "混合熵",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "entry": "dist/index.js",
   "sdkVersion": ">=1.9.8",
   "dataDependencies": {
     "pickTable": {
       "name": "随机候选表",
-      "description": "随机抽取的候选列表：内容 + 可选权重（>0 参与，缺省均匀随机）",
+      "description": "候选内容与可选权重：全部留空均匀；混合时空权重为0；无效或负权重报错，全零默认不抽取。",
       "contract": "mixing-entropy.random-math.pick-table",
       "version": "^1.0.0",
       "access": "read",
@@ -20,11 +20,27 @@
         "runtimePolicy": "readonly",
         "schema": {
           "type": "object",
-          "required": ["label"],
+          "required": [
+            "label"
+          ],
           "columns": [
-            { "key": "pool", "label": "池名（分组；可空=默认池）", "type": "text", "description": "一张表 = 多个安科池：同池名的行归为一组，方法按池名筛选；留空的行属于默认池" },
-            { "key": "label", "label": "内容", "type": "text" },
-            { "key": "weight", "label": "权重（数字 或 表达式）", "type": "text", "description": "数字=固定权重；表达式=复合权重（可引用项目变量）：var(\"变量名\") 比较 > < >= <= == != 三元 ? : — 例：var(\"flag_seen\")==1 ? 5 : 2" }
+            {
+              "key": "pool",
+              "label": "池名（分组；可空=默认池）",
+              "type": "text",
+              "description": "一张表 = 多个安科池：同池名的行归为一组，方法按池名筛选；留空的行属于默认池"
+            },
+            {
+              "key": "label",
+              "label": "内容",
+              "type": "text"
+            },
+            {
+              "key": "weight",
+              "label": "权重（数字 或 表达式）",
+              "type": "text",
+              "description": "数字=固定权重；表达式=复合权重（可引用项目变量）：var(\"变量名\") 比较 > < >= <= == != 三元 ? : — 例：var(\"flag_seen\")==1 ? 5 : 2"
+            }
           ]
         }
       }
@@ -41,11 +57,27 @@
         "runtimePolicy": "readonly",
         "schema": {
           "type": "object",
-          "required": ["name", "expr"],
+          "required": [
+            "name",
+            "expr"
+          ],
           "columns": [
-            { "key": "name", "label": "函数名", "type": "text" },
-            { "key": "expr", "label": "表达式", "type": "long-text", "description": "白名单语法：数字、参数 x/y/z/w、运算符 + - * / ^、括号；函数 sqrt() pow() floor() round() min() max() clamp()；示例与速查见扩展设置「表达式语法速查」" },
-            { "key": "desc", "label": "说明", "type": "text" }
+            {
+              "key": "name",
+              "label": "函数名",
+              "type": "text"
+            },
+            {
+              "key": "expr",
+              "label": "表达式",
+              "type": "long-text",
+              "description": "白名单语法：数字、参数 x/y/z/w、运算符 + - * / ^、括号；函数 sqrt() pow() floor() round() min() max() clamp()；示例与速查见扩展设置「表达式语法速查」"
+            },
+            {
+              "key": "desc",
+              "label": "说明",
+              "type": "text"
+            }
           ]
         }
       }
