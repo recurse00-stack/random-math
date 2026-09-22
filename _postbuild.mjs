@@ -2,6 +2,7 @@
 import { rmSync, readdirSync, renameSync, existsSync, copyFileSync, lstatSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { buildSync } from 'esbuild';
 
 const dist = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dist');
 // Only touch regular, project-local build output; reject redirected output trees.
@@ -33,6 +34,12 @@ if (existsSync(srcDir)) {
 }
 // 双保险：部分入口按 index.mjs 识别（工坊提交提示），复制一份兼容
 if (existsSync(path.join(dist, 'index.js'))) {
+  // Studio loads the entry through its module wrapper; keep local imports inside
+  // the entry rather than relying on relative imports from a blob/module URL.
+  const entry = path.join(dist, 'index.js');
+  buildSync({ entryPoints: [entry], outfile: entry, bundle: true, allowOverwrite: true,
+    platform: 'browser', format: 'esm', target: 'es2022', external: ['@avg-studio/sdk'],
+    charset: 'utf8', legalComments: 'none' });
   copyFileSync(path.join(dist, 'index.js'), path.join(dist, 'index.mjs'));
 }
 console.log('[postbuild] dist 已收拢（含 index.mjs 兼容副本）');

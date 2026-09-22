@@ -9,7 +9,7 @@ VERSION = json.loads((ROOT / 'extension.json').read_text(encoding='utf-8'))['ver
 OUTPUT = ROOT / 'release'
 OUTPUT.mkdir(exist_ok=True)
 DOCS = ['README.md', 'CHANGELOG.md', 'RELEASE-NOTES.md', 'LICENSE',
-        'docs/USER-GUIDE.md', 'docs/MIGRATION-2.0.md']
+        'docs/USER-GUIDE.md', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md']
 
 def archive(name, paths):
     target = OUTPUT / name
@@ -33,7 +33,7 @@ def archive(name, paths):
 
 packages = [
     archive(f'random-math-v{VERSION}.zip', DOCS + [
-        'extension.json', 'dist/index.js', 'dist/index.mjs', 'assets/cover.png']),
+        'extension.json', 'dist/index.js', 'dist/index.mjs', 'dist/deck.js', 'assets/cover.png']),
     archive(f'random-math-v{VERSION}-docs.zip', DOCS),
 ]
 (OUTPUT / 'SHA256SUMS.txt').write_text(''.join(

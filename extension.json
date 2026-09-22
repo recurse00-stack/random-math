@@ -1,16 +1,16 @@
 {
   "id": "mixing-entropy.random-math",
   "name": "随机与计算系统",
-  "description": "纯数学扩展：等概率整数/小数与批量随机、随存档固定结果、多池加权抽取与概率检查、白名单表达式和嵌套函数。无网络、无原生依赖。",
+  "description": "范围与批量随机、持久不重复抽取池、数组洗牌、随存档固定顺序或每次重抽剩余项、权重与固定概率、文字及数值公式、数学计算。无网络、无原生依赖。",
   "icon": "assets/cover.png",
   "author": "混合熵",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "entry": "dist/index.js",
   "sdkVersion": ">=1.9.8",
   "dataDependencies": {
     "pickTable": {
       "name": "随机候选表",
-      "description": "候选内容与可选权重：全部留空均匀；混合时空权重为0；无效或负权重报错，全零默认不抽取。",
+      "description": "weight 填 10% 锁定10%概率，数字或表达式按权重分配剩余概率；全部留空均匀。固定概率超额、剩余无正权重默认报错。",
       "contract": "mixing-entropy.random-math.pick-table",
       "version": "^1.0.0",
       "access": "read",
@@ -37,9 +37,9 @@
             },
             {
               "key": "weight",
-              "label": "权重（数字 或 表达式）",
+              "label": "权重／固定概率",
               "type": "text",
-              "description": "数字=固定权重；表达式=复合权重（可引用项目变量）：var(\"变量名\") 比较 > < >= <= == != 三元 ? : — 例：var(\"flag_seen\")==1 ? 5 : 2"
+              "description": "10%=锁定10%概率；10=相对权重；var(\"变量名\")=动态权重。固定概率先保留，数字和表达式分配剩余概率；如 A=10%、B=20、C=30，概率为10%、36%、54%。% 后缀只接受数字，不用于表达式。"
             }
           ]
         }

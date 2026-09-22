@@ -14,8 +14,9 @@ for (const generation of ['first', 'second']) {
   const expected = `export const generation = "${generation}";\n`;
   writeFileSync(path.join(run, 'dist', 'src', 'index.js'), expected);
   await import(pathToFileURL(path.join(run, '_postbuild.mjs')).href + '?generation=' + generation);
-  assert.equal(readFileSync(path.join(run, 'dist', 'index.js'), 'utf8'), expected);
-  assert.equal(readFileSync(path.join(run, 'dist', 'index.mjs'), 'utf8'), expected, 'index.mjs retained stale code');
+  const built = readFileSync(path.join(run, 'dist', 'index.js'), 'utf8');
+  assert.equal((await import(pathToFileURL(path.join(run, 'dist', 'index.mjs')).href+'?generation='+generation)).generation, generation);
+  assert.equal(readFileSync(path.join(run, 'dist', 'index.mjs'), 'utf8'), built, 'index.mjs retained stale code');
   assert.equal(existsSync(path.join(run, 'dist', 'src')), false);
   assert.equal(existsSync(path.join(run, 'dist', 'sdk')), false);
 }

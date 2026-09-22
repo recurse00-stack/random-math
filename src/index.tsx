@@ -1,5 +1,31 @@
 // Random/math utilities: one runtime entry, stable public method IDs.
-import { Extension, extension, method, settings, defineSave, type ExtensionContext, type BlockSchema, type VariableValue } from "@avg-studio/sdk";
+import { Extension, extension, method as sdkMethod, settings, defineSave, type ExtensionContext, type BlockSchema, type VariableValue, type ExtensionMethodDef, type ExtensionMethodReturns, type ExtensionMethodReturnValue } from "@avg-studio/sdk";
+import { type Deck, type Item, MAX_ITEMS, deckKey, parseDecks, encodeDecks, uniqueItems, shuffle, take, report as deckReport } from './deck.js';
+
+// Studio 2.0 replays extension actions after restoring slot variables. The SDK
+// exposes getHost() as unknown; keep the optional host adaptation in one place.
+// Unknown hosts conservatively preserve the snapshot during immediate replay.
+function isNavigationReplay(ctx: ExtensionContext): boolean {
+    try {
+        const host = ctx.getHost?.() as { application?: { scriptingSystem?: { getActiveSeekPurpose?: () => unknown } } } | undefined;
+        return host?.application?.scriptingSystem?.getActiveSeekPurpose?.() === 'navigation';
+    } catch { return false; }
+}
+
+function method<const S extends BlockSchema | undefined = undefined, const R extends ExtensionMethodReturns | undefined = undefined>(def: ExtensionMethodDef<S, R>) {
+    return sdkMethod<S, R>({ ...def,
+        runImmediately(ctx, params) {
+            if (isNavigationReplay(ctx)) return def.run.call(this, ctx, params);
+            // Archived If outcomes are replayed by the host. Do not redraw,
+            // reset pools, recompute formulas, or overwrite restored outputs.
+            const fields = params as Record<string, unknown>;
+            const output = typeof fields.outVar === 'string' ? ctx.variables.get(fields.outVar) : undefined;
+            const kind = def.returns?.type;
+            return (typeof output === kind ? output : kind === 'number' ? -1 : kind === 'string' ? '' : kind === 'boolean' ? false : undefined) as ExtensionMethodReturnValue<R>;
+        },
+        skip(ctx, params) { return def.run.call(this, ctx, params); },
+    });
+}
 // ==================== 白名单表达式 DSL（无 eval） ====================
 // 支持：数字、参数 x/y/z/w、运算符 + - * / ^（幂）、括号、比较 < > <= >= == !=、三元 ? :、字符串(仅 var 调用)、
 //       函数 sqrt(a) pow(a,b) floor(a) round(a) min(a,b) max(a,b) clamp(a,min,max) var("变量名")
@@ -577,7 +603,7 @@ const poolFields = {
     poolScope: { type: 'enum', label: '候选范围', default: 'named', options: [{ label: '指定池（空名称兼容全表）', value: 'named' }, { label: '仅未命名池', value: 'default' }, { label: '全部池', value: 'all' }] },
     pool: { type: 'string', label: '池名', default: '', visibleWhen: { field: 'poolScope', equals: 'named' }, suggestions: { key: 'pool' } },
     field: { type: 'string', label: '输出列', default: 'label' },
-    emptyPolicy: { type: 'enum', label: '全部权重为零时', default: 'error', options: [{ label: '不抽取并报告错误', value: 'error' }, { label: '明确允许均匀回退', value: 'uniform' }] },
+    emptyPolicy: { type: 'enum', label: '剩余概率无正权重时', default: 'error', options: [{ label: '不抽取并报告错误', value: 'error' }, { label: '明确允许均匀回退', value: 'uniform' }] },
 } as const satisfies BlockSchema;
 type PoolInput = {
     poolScope?: string;
@@ -597,49 +623,257 @@ async function poolReport(ctx: Context, p: PoolInput) {
     const field = (p.field || 'label').trim();
     const hasWeight = (r: Row) => r.weight !== undefined && r.weight !== null && String(r.weight).trim() !== '';
     const unweighted = table.every(r => !hasWeight(r));
-    const needsLibrary = table.map((r, i) => {
-        if (!hasWeight(r) || typeof r.weight !== 'string')
+    const specs = table.map((row, i) => {
+        const raw = typeof row.weight === 'string' ? row.weight.trim() : row.weight;
+        const kind = typeof raw === 'string' && raw.endsWith('%') ? 'fixed' : 'relative';
+        const name = String(row.id ?? row.label ?? i + 1);
+        if (kind === 'fixed' && !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?%$/.test(raw as string))
+            reject(`候选「${name}」：固定概率请填写数字加 %，例如 10%`);
+        return { row, raw, kind, name };
+    });
+    const needsLibrary = specs.some(({ raw, kind, name }) => {
+        if (kind === 'fixed' || typeof raw !== 'string' || !raw)
             return false;
         try {
-            return tokenize(r.weight).some((t, j, a) => t.t === 'id' && a[j + 1]?.t === 'lp' && !['var', 'sqrt', 'pow', 'floor', 'round', 'min', 'max', 'clamp'].includes(t.v));
+            return tokenize(raw).some((t, j, a) => t.t === 'id' && a[j + 1]?.t === 'lp' && !['var', 'sqrt', 'pow', 'floor', 'round', 'min', 'max', 'clamp'].includes(t.v));
         }
         catch (e) {
-            return reject(`候选「${r.id ?? r.label ?? i + 1}」：${message(e)}`);
+            return reject(`候选「${name}」：${message(e)}`);
         }
-    }).some(Boolean);
+    });
     const evaluate = needsLibrary ? await functionLibrary(ctx) : (expr: string) => standalone(ctx, expr);
-    const candidates = table.map((row, i) => {
+    const candidates = specs.map(({ row, raw, kind, name }) => {
         let weight: number;
         try {
-            weight = unweighted ? 1 : !hasWeight(row) ? 0 : typeof row.weight === 'number' ? row.weight : typeof row.weight === 'string' ? evaluate(row.weight) : reject('权重类型无效');
-            number(weight, '权重');
-            if (weight < 0)
-                reject('权重不能为负');
+            weight = kind === 'fixed' ? Number((raw as string).slice(0, -1))
+                : unweighted ? 1 : !hasWeight(row) ? 0
+                : typeof raw === 'number' ? raw : typeof raw === 'string' ? evaluate(raw) : reject('权重类型无效');
+            number(weight, kind === 'fixed' ? '固定概率' : '权重');
+            if (kind === 'fixed' ? weight < 0 || weight > 100 : weight < 0)
+                reject(kind === 'fixed' ? '固定概率必须在 0%～100% 之间' : '权重不能为负');
         }
         catch (e) {
-            return reject(`候选「${row.id ?? row.label ?? i + 1}」：${message(e)}`);
+            return reject(`候选「${name}」：${message(e)}`);
         }
         const value = row[field];
         if (value === undefined || value === null || !['string', 'number', 'boolean'].includes(typeof value))
-            reject(`候选「${row.id ?? i + 1}」缺少有效列「${field}」`);
-        return { id: typeof row.id === 'string' ? row.id : '', value: String(value), weight, probability: 0 };
+            reject(`候选「${name}」缺少有效列「${field}」`);
+        return { id: typeof row.id === 'string' ? row.id : '', value: String(value), kind, weight, probability: 0 };
     });
-    let max = Math.max(...candidates.map(c => c.weight));
-    const fallback = max === 0;
-    if (fallback) {
-        if (policy !== 'uniform')
-            reject('所有候选权重为0，没有可抽取项');
-        candidates.forEach(c => { c.weight = 1; });
-        max = 1;
+    // Compensated summation keeps many small reserved percentages from drifting at 100%.
+    let fixedPercent = 0, correction = 0;
+    for (const c of candidates.filter(c => c.kind === 'fixed')) {
+        const adjusted = c.weight - correction, total = fixedPercent + adjusted;
+        correction = (total - fixedPercent) - adjusted;
+        fixedPercent = total;
+        c.probability = c.weight / 100;
     }
-    const total = candidates.reduce((sum, c) => sum + c.weight / max, 0);
-    candidates.forEach(c => { c.probability = (c.weight / max) / total; });
-    return { scope, pool, unweighted, fallback, candidates };
+    const tolerance = Number.EPSILON * 100 * 8;
+    if (fixedPercent > 100 + tolerance)
+        reject('固定概率合计超过 100%，请降低固定概率或拆分候选池');
+    const fixedProbability = Math.abs(fixedPercent - 100) <= tolerance ? 1 : fixedPercent / 100;
+    const remainingProbability = 1 - fixedProbability;
+    const relative = candidates.filter(c => c.kind === 'relative');
+    let fallback = false;
+    if (remainingProbability > 0) {
+        if (!relative.length)
+            reject('固定概率未满 100%，请添加相对权重候选来分配剩余概率（也可添加“无事发生”）');
+        let max = Math.max(...relative.map(c => c.weight));
+        fallback = max === 0;
+        if (fallback) {
+            if (policy !== 'uniform')
+                reject('剩余概率没有正权重候选：所有相对权重为0');
+            relative.forEach(c => { c.weight = 1; });
+            max = 1;
+        }
+        const total = relative.reduce((sum, c) => sum + c.weight / max, 0);
+        relative.forEach(c => { c.probability = remainingProbability * ((c.weight / max) / total); });
+    }
+    return { scope, pool, unweighted, fallback, fixedProbability, remainingProbability, candidates };
 }
+type DrawInput = PoolInput & { count?: number; replacement?: string; outIdVar?: string };
+async function drawPool(ctx: Context, p: DrawInput, numeric = false) {
+    const count = p.count ?? 1, replacement = p.replacement ?? 'with';
+    if (!Number.isInteger(count) || count < 1 || count > 100) reject('抽取数量必须为1～100整数');
+    if (!['with', 'without'].includes(replacement)) reject('重复规则无效');
+    const report = await poolReport(ctx, p);
+    let evaluate = (expr: string) => standalone(ctx, expr);
+    if (numeric) {
+        const needsLibrary = report.candidates.some(c => {
+            try { return tokenize(c.value).some((t, i, a) => t.t === 'id' && a[i + 1]?.t === 'lp' && !['var', 'sqrt', 'pow', 'floor', 'round', 'min', 'max', 'clamp'].includes(t.v)); }
+            catch (e) { return reject(`候选「${c.id || c.value}」数值：${message(e)}`); }
+        });
+        if (needsLibrary) evaluate = await functionLibrary(ctx);
+    }
+    // Resolve every numeric expression before drawing or writing output variables.
+    const candidates = report.candidates.map(c => {
+        let numberValue = 0;
+        if (numeric) {
+            try { numberValue = number(evaluate(c.value), '数值结果'); }
+            catch (e) { return reject(`候选「${c.id || c.value}」数值：${message(e)}`); }
+        }
+        return { ...c, numberValue };
+    });
+    const active = candidates.filter(c => c.probability > 0);
+    if (p.outIdVar && active.some(c => !c.id)) reject('候选缺少行ID');
+    if (replacement === 'without' && count > active.length)
+        reject(`同批不重复最多可抽${active.length}个正概率候选，请减少数量`);
+    const chosen: typeof active = [];
+    for (let i = 0; i < count; i++) {
+        const max = Math.max(...active.map(c => c.probability));
+        const total = active.reduce((sum, c) => sum + c.probability / max, 0);
+        let roll = Math.random() * total;
+        let index = active.findIndex(c => { roll -= c.probability / max; return roll < 0; });
+        if (index < 0) index = active.length - 1;
+        chosen.push(active[index]);
+        if (replacement === 'without') active.splice(index, 1);
+    }
+    return chosen;
+}
+const drawFields = {
+    count: { type: 'number', label: '抽取数量', default: 1, min: 1, max: 100, step: 1 },
+    replacement: { type: 'enum', label: '重复规则', default: 'with', options: [{ label: '允许重复（每次概率不变）', value: 'with' }, { label: '同批不重复（按行排除，后续概率改变）', value: 'without' }] },
+} as const satisfies BlockSchema;
+type DeckStore = { records: Deck[]; raw: unknown; read: () => unknown; write: (decks: Deck[]) => void; restore: () => void };
+const deckBusy = new WeakSet<object>();
+function deckStore(owner: object): DeckStore {
+    const save = (owner as { save?: { get(key: string): unknown; set(key: string, value: unknown): void } }).save;
+    if (!save) reject('抽取池需要宿主槽存档上下文');
+    const raw = save!.get('drawDecks'), records = parseDecks(raw);
+    return { records, raw, read: () => save!.get('drawDecks'), write: next => save!.set('drawDecks', encodeDecks(next)), restore: () => save!.set('drawDecks', raw ?? []) };
+}
+function deckAcquire(owner: object) {
+    if (deckBusy.has(owner)) reject('抽取池正在处理另一次调用，请按顺序执行');
+    deckBusy.add(owner);
+    return () => deckBusy.delete(owner);
+}
+function deckCommit(ctx: Context, store: DeckStore, next: Deck[], writes: [string, VariableValue][], p: Outputs, signal?: AbortSignal) {
+    if (signal?.aborted) reject('运行已取消，未修改抽取池');
+    if (JSON.stringify(store.read()) !== JSON.stringify(store.raw)) reject('存档状态已变化，请重新执行');
+    if (p.successVar) writes.push([p.successVar, true]);
+    if (p.errorVar) writes.push([p.errorVar, '']);
+    store.write(next);
+    try { writeAll(ctx, writes); }
+    catch (e) { store.restore(); throw e; }
+}
+async function deckCandidates(ctx: Context, p: PoolInput & { source?: string; arrayJson?: string; arrayVar?: string; valueType?: string; uniqueBy?: string }): Promise<Item[]> {
+    const source = p.source ?? 'table', valueType = p.valueType ?? 'text';
+    if (!['table', 'array'].includes(source) || !['text', 'number'].includes(valueType)) reject('抽取池来源或输出类型无效');
+    let items: Item[];
+    if (source === 'array') {
+        const raw = p.arrayVar ? ctx.variables.get(p.arrayVar) : p.arrayJson;
+        if (typeof raw !== 'string' || raw.length > 1_000_000) reject('数组输入必须为不超过1000000字符的JSON文本');
+        const parsed: unknown = JSON.parse(raw as string);
+        if (!Array.isArray(parsed) || !parsed.length || parsed.length > MAX_ITEMS) reject('数组必须包含1～10000项');
+        items = (parsed as unknown[]).map((value, i) => {
+            if (valueType === 'number' ? typeof value !== 'number' || !Number.isFinite(value) : typeof value !== 'string') reject('数组元素类型必须与输出类型一致，数值数组只接受有限数字');
+            return { id: `array:${i + 1}`, value: value as string | number, weight: 1 };
+        });
+    } else {
+        const candidates = (await poolReport(ctx, p)).candidates;
+        let evaluate = (expr: string) => standalone(ctx, expr);
+        if (valueType === 'number' && candidates.some(c => tokenize(c.value).some((t, i, a) => t.t === 'id' && a[i + 1]?.t === 'lp' && !['var', 'sqrt', 'pow', 'floor', 'round', 'min', 'max', 'clamp'].includes(t.v)))) evaluate = await functionLibrary(ctx);
+        items = candidates.map(c => ({ id: c.id, value: valueType === 'number' ? number(evaluate(c.value), '数值结果') : c.value, weight: c.probability })).filter(c => c.weight > 0);
+    }
+    return uniqueItems(items, p.uniqueBy ?? 'value');
+}
+const deckKeyField = { key: { type: 'string', label: '抽取池名称（独立命名，随存档）', required: true, default: '' } } as const satisfies BlockSchema;
+
 @extension({ id: 'random-math', label: '随机与计算系统' })
 export class RandomMath extends Extension {
-    static saveSchema = defineSave({ fixedResults: { type: 'list', persistence: 'slot', default: [] as string[], label: '固定随机记录' } });
-    static settings = settings(s => ({ dslCheat: s.string('表达式语法速查').default('支持 + - * / ^、负数、比较和三元条件；幂优先且右结合。\n函数 sqrt pow floor round min max clamp、var("变量名")及表函数（禁止递归）。\n例 clamp(round(x*y),0,100)。固定结果跟随当前存档，读回抽取前存档会重抽。').multiline() }));
+    static saveSchema = defineSave({ drawDecks: { type: 'list', persistence: 'slot', default: [] as string[], label: '不重复抽取池' }, fixedResults: { type: 'list', persistence: 'slot', default: [] as string[], label: '固定随机记录' } });
+    static settings = settings(s => ({ dslCheat: s.string('表达式语法速查').default('支持 + - * / ^、负数、比较和三元条件；幂优先且右结合。\n函数 sqrt pow floor round min max clamp、var("变量名")及表函数（禁止递归）。\n例 clamp(round(x*y),0,100)。候选表 weight 填 10% 锁定10%概率，数字或表达式分配剩余概率。% 只用于候选表数字后缀。固定结果跟随当前存档，读回抽取前存档会重抽。').multiline() }));
+    static deckCreate = method({ id: 'deck-create', title: '建立不重复抽取池', description: '从候选表或JSON数组建立持久抽取池。重复建立同名池会报错，重开一轮须先重置。', schema: {
+        ...deckKeyField,
+        source: { type: 'enum', label: '来源', default: 'table', options: [{ label: '随机候选表', value: 'table' }, { label: 'JSON数组', value: 'array' }] },
+        ...poolFields,
+        arrayJson: { type: 'string', label: 'JSON数组（如 ["A","B","C"] 或 [1,2,3]）', default: '', visibleWhen: { field: 'source', equals: 'array' } },
+        arrayVar: { type: 'variable', label: '从文本变量读取JSON数组（优先于上方文本）', visibleWhen: { field: 'source', equals: 'array' } },
+        valueType: { type: 'enum', label: '结果类型', default: 'text', options: [{ label: '文字', value: 'text' }, { label: '数值（表中允许公式）', value: 'number' }] },
+        mode: { type: 'enum', label: '抽取方式', default: 'fixed', options: [{ label: '建立时洗牌，之后依次抽取', value: 'fixed' }, { label: '每次从剩余项随机抽取（可读档重抽）', value: 'remaining' }] },
+        uniqueBy: { type: 'enum', label: '相同内容处理', default: 'value', options: [{ label: '合并相同结果（权重相加，保留首项ID）', value: 'value' }, { label: '按行／数组位置区分（相同内容可再次出现）', value: 'row' }] },
+        outVar: { type: 'variable', label: '初始池报告（JSON文本，可空）' }, ...resultFields,
+    }, returns: { type: 'number', label: '池内项目数量；失败-1' }, async run(ctx, p) {
+        let release: (() => void) | undefined;
+        const signal = ctx.flow?.signal;
+        try {
+            release = deckAcquire(this); outputs(ctx, p, 'string');
+            const key = deckKey(p.key), mode = p.mode ?? 'fixed', valueType = p.valueType ?? 'text';
+            if (!['fixed', 'remaining'].includes(mode)) reject('抽取方式无效');
+            const store = deckStore(this);
+            if (store.records.some(d => d.key === key)) reject('同名抽取池已存在；继续抽取请用“从抽取池取出”，重开请先重置');
+            const items = await deckCandidates(ctx, p);
+            if (signal?.aborted) reject('运行已取消');
+            const deck: Deck = { version: 1, key, mode: mode as Deck['mode'], valueType: valueType as Deck['valueType'], total: items.length, drawn: 0, items };
+            // Validate limits before consuming randomness.
+            encodeDecks([...store.records, deck]);
+            if (mode === 'fixed') deck.items = shuffle(items);
+            const writes: [string, VariableValue][] = p.outVar ? [[p.outVar, JSON.stringify(deckReport(deck))]] : [];
+            deckCommit(ctx, store, [...store.records, deck], writes, p, signal);
+            return deck.total;
+        } catch (e) { if (!signal?.aborted) failed(ctx, p, '建立抽取池', e); return -1; }
+        finally { release?.(); }
+    } });
+    static deckDraw = method({ id: 'deck-draw', title: '从抽取池取出', description: '跨多次调用持续不重复。抽出的项目从当前槽的池中移除；余量不足整批失败，不自动补回。返回结果JSON数组。', schema: {
+        ...deckKeyField,
+        count: { type: 'number', label: '本次取出数量', default: 1, min: 1, max: 100, step: 1 },
+        outVar: { type: 'variable', label: '单项结果（文字／数值，与建池类型一致）', visibleWhen: { field: 'count', equals: 1 } },
+        prefix: { type: 'string', label: '批量逐项前缀（可空，需预先声明 前缀_1…N）', default: '' },
+        reportVar: { type: 'variable', label: '本次结果数组（JSON文本，可空）' },
+        outIdVar: { type: 'variable', label: '本次行ID数组（JSON文本，可空）' },
+        remainingVar: { type: 'variable', label: '剩余数量（数值，可空）' }, ...resultFields,
+    }, returns: { type: 'string', label: '结果JSON数组；失败空串' }, run(ctx, p) {
+        let release: (() => void) | undefined;
+        const signal = ctx.flow?.signal, count = p.count ?? 1;
+        const names = Number.isInteger(count) && count > 1 && count <= 100 && p.prefix?.trim() ? Array.from({ length: count }, (_, i) => `${p.prefix.trim()}_${i + 1}`) : [];
+        const output = { ...p, outVar: count === 1 ? p.outVar : undefined };
+        const extra = [p.reportVar, p.outIdVar, p.remainingVar, ...names].filter(Boolean);
+        try {
+            release = deckAcquire(this);
+            const store = deckStore(this), key = deckKey(p.key), deck = store.records.find(d => d.key === key);
+            if (!deck) reject('抽取池不存在，请先建立');
+            const type = deck!.valueType === 'number' ? 'number' : 'string';
+            outputs(ctx, output, type, extra);
+            compatible(ctx, p.reportVar, 'string'); compatible(ctx, p.outIdVar, 'string'); compatible(ctx, p.remainingVar, 'number');
+            for (const name of names) { if (ctx.variables.get(name) === undefined) reject(`请先声明批量变量「${name}」`); compatible(ctx, name, type); }
+            if (signal?.aborted) reject('运行已取消');
+            const { next, chosen } = take(deck!, count), text = JSON.stringify(chosen.map(i => i.value));
+            const writes: [string, VariableValue][] = names.map((name, i) => [name, chosen[i].value]);
+            if (output.outVar) writes.push([output.outVar, chosen[0].value]);
+            if (p.reportVar) writes.push([p.reportVar, text]);
+            if (p.outIdVar) writes.push([p.outIdVar, JSON.stringify(chosen.map(i => i.id))]);
+            if (p.remainingVar) writes.push([p.remainingVar, next.items.length]);
+            deckCommit(ctx, store, store.records.map(d => d.key === key ? next : d), writes, output, signal);
+            return text;
+        } catch (e) { if (!signal?.aborted) failed(ctx, output, '抽取池取出', e, extra); return ''; }
+        finally { release?.(); }
+    } });
+    static deckPeek = method({ id: 'deck-peek', title: '查看抽取池／剩余数组', description: '不抽取、不洗牌。返回总数、已抽数量、剩余数值／文字数组和ID数组。', schema: {
+        ...deckKeyField, outVar: { type: 'variable', label: '池报告（JSON文本，可空）' },
+        arrayVar: { type: 'variable', label: '仅剩余结果数组（JSON文本，可空）' }, remainingVar: { type: 'variable', label: '剩余数量（数值，可空）' }, ...resultFields,
+    }, returns: { type: 'string', label: '池报告JSON；失败空串' }, run(ctx, p) {
+        try {
+            if (deckBusy.has(this)) reject('抽取池正在处理另一次调用');
+            outputs(ctx, p, 'string', [p.arrayVar, p.remainingVar].filter(Boolean)); compatible(ctx, p.arrayVar, 'string'); compatible(ctx, p.remainingVar, 'number');
+            if (ctx.flow?.signal.aborted) reject('运行已取消');
+            const key = deckKey(p.key), deck = deckStore(this).records.find(d => d.key === key);
+            if (!deck) reject('抽取池不存在，请先建立');
+            const report = deckReport(deck!), text = JSON.stringify(report), writes: [string, VariableValue][] = [];
+            if (p.outVar) writes.push([p.outVar, text]); if (p.arrayVar) writes.push([p.arrayVar, JSON.stringify(report.values)]); if (p.remainingVar) writes.push([p.remainingVar, report.remaining]);
+            if (p.successVar) writes.push([p.successVar, true]); if (p.errorVar) writes.push([p.errorVar, '']);
+            writeAll(ctx, writes); return text;
+        } catch (e) { if (!ctx.flow?.signal.aborted) failed(ctx, p, '查看抽取池', e, [p.arrayVar, p.remainingVar]); return ''; }
+    } });
+    static deckReset = method({ id: 'deck-reset', title: '重置／删除指定抽取池', description: '删除指定池记录；不清空已有结果变量。再次建立后开始新一轮。', schema: { ...deckKeyField, ...resultFields }, returns: { type: 'boolean', label: '是否成功' }, run(ctx, p) {
+        let release: (() => void) | undefined;
+        try {
+            release = deckAcquire(this); outputs(ctx, p, 'string');
+            const key = deckKey(p.key), store = deckStore(this);
+            deckCommit(ctx, store, store.records.filter(d => d.key !== key), [], p, ctx.flow?.signal); return true;
+        } catch (e) { if (!ctx.flow?.signal.aborted) failed(ctx, p, '重置抽取池', e); return false; }
+        finally { release?.(); }
+    } });
+
     static rand = method({ id: 'rand', title: '随机数', description: '按指定精度等概率抽取。单次返回结果，批量返回数量。固定结果随存档保存。', schema: {
             mode: { type: 'enum', label: '模式', required: true, default: 'fresh', options: [{ label: '每次重抽', value: 'fresh' }, { label: '首次抽取后固定（随存档）', value: 'sticky' }] },
             min: { type: 'number', label: '最小值', required: true, default: 0 }, max: { type: 'number', label: '最大值', required: true, default: 100 },
@@ -647,16 +881,18 @@ export class RandomMath extends Extension {
             includeMin: { type: 'boolean', label: '包含最小端点', default: true }, includeMax: { type: 'boolean', label: '包含最大端点', default: true },
             count: { type: 'number', label: '数量（大于1批量输出）', default: 1, min: 1, max: 100, step: 1 },
             outVar: { type: 'variable', label: '单次结果变量', visibleWhen: { field: 'count', equals: 1 } }, prefix: { type: 'string', label: '批量前缀（数量大于1时使用）', default: '' },
+            reportVar: { type: 'variable', label: '完整结果数组（JSON文本，可空）' },
             fixedKey: { type: 'string', label: '固定记录名（空=结果变量或批量前缀）', default: '', visibleWhen: { field: 'mode', equals: 'sticky' } },
             fixedPolicy: { type: 'enum', label: '旧存档首次接入', default: 'fresh', visibleWhen: { field: 'mode', equals: 'sticky' }, options: [{ label: '首次生成，忽略输出默认值', value: 'fresh' }, { label: '采用完整的既有结果', value: 'adopt' }] }, ...resultFields,
         }, returns: { type: 'number', label: '单次值／批量数量；失败-1，配合成功状态' }, run(ctx, p) {
-            const count = p.count ?? 1, names = count > 1 && Number.isInteger(count) && count <= 100 ? Array.from({ length: count }, (_, i) => `${(p.prefix || '').trim()}_${i + 1}`) : p.outVar ? [p.outVar] : [];
+            const count = p.count ?? 1, names = count > 1 ? (Number.isInteger(count) && count <= 100 && p.prefix?.trim() ? Array.from({ length: count }, (_, i) => `${p.prefix.trim()}_${i + 1}`) : []) : p.outVar ? [p.outVar] : [];
             try {
-                outputs(ctx, { ...p, outVar: count === 1 ? p.outVar : undefined }, 'number', count > 1 ? names : []);
+                outputs(ctx, { ...p, outVar: count === 1 ? p.outVar : undefined }, 'number', [...(count > 1 ? names : []), p.reportVar].filter(Boolean));
+                compatible(ctx, p.reportVar, 'string');
                 if (!Number.isInteger(count) || count < 1 || count > 100)
                     reject('数量必须为1～100整数');
-                if (count > 1 && !(p.prefix || '').trim())
-                    reject('批量抽取需要前缀');
+                if (count > 1 && !(p.prefix || '').trim() && !p.reportVar)
+                    reject('批量抽取需要前缀或JSON数组报告变量');
                 if (count > 1)
                     for (const name of names) {
                         if (ctx.variables.get(name) === undefined)
@@ -668,8 +904,8 @@ export class RandomMath extends Extension {
                     reject('未知随机模式');
                 let values: number[], store: ReturnType<typeof fixedState> | undefined, next: Fixed[] | undefined;
                 if (mode === 'sticky') {
-                    const key = p.fixedKey?.trim() || (count > 1 ? `batch:${p.prefix.trim()}` : `value:${p.outVar || ''}`);
-                    if (!p.fixedKey?.trim() && !names.length)
+                    const key = p.fixedKey?.trim() || (count > 1 ? (p.prefix?.trim() ? `batch:${p.prefix.trim()}` : `array:${p.reportVar || ''}`) : `value:${p.outVar || ''}`);
+                    if (!p.fixedKey?.trim() && !names.length && !(count > 1 && p.reportVar))
                         reject('固定随机需要记录名或结果变量');
                     store = fixedState(this);
                     const signature = JSON.stringify([draw.lo, draw.hi, draw.scale, count]);
@@ -683,7 +919,13 @@ export class RandomMath extends Extension {
                         const policy = p.fixedPolicy || 'fresh';
                         if (!['fresh', 'adopt'].includes(policy))
                             reject('旧存档接入方式无效');
-                        values = policy === 'adopt' ? names.map(n => number(ctx.variables.get(n), `旧结果「${n}」`)) : Array.from({ length: count }, draw.draw);
+                        if (policy === 'adopt' && !names.length && count > 1 && p.reportVar) {
+                            const previous = ctx.variables.get(p.reportVar);
+                            if (typeof previous !== 'string') reject('旧数组结果必须为JSON文本');
+                            const parsed: unknown = JSON.parse(previous as string);
+                            if (!Array.isArray(parsed) || !parsed.every(v => typeof v === 'number' && Number.isFinite(v))) reject('旧数组结果无效');
+                            values = parsed as number[];
+                        } else values = policy === 'adopt' ? names.map(n => number(ctx.variables.get(n), `旧结果「${n}」`)) : Array.from({ length: count }, draw.draw);
                         if (values.length !== count || !values.every(draw.valid))
                             reject('既有结果不完整或不符合范围与精度');
                         if (store.records.length >= 10000)
@@ -697,7 +939,9 @@ export class RandomMath extends Extension {
                 if (store && next)
                     store.write(next);
                 try {
-                    writeAll(ctx, names.map((name, i) => [name, values[i]]));
+                    const writes: [string, VariableValue][] = names.map((name, i) => [name, values[i]]);
+                    if (p.reportVar) writes.push([p.reportVar, JSON.stringify(values)]);
+                    writeAll(ctx, writes);
                 }
                 catch (e) {
                     if (store && next)
@@ -708,7 +952,7 @@ export class RandomMath extends Extension {
                 return count === 1 ? values[0] : count;
             }
             catch (e) {
-                failed(ctx, p, '随机数', e, names);
+                failed(ctx, p, '随机数', e, [...names, p.reportVar]);
                 return -1;
             }
         } });
@@ -728,35 +972,73 @@ export class RandomMath extends Extension {
             failed(ctx, p, '重置固定随机', e);
             return false;
         } } });
-    static randPick = method({ id: 'rand-pick', title: '列表随机（安科式）', description: '无权重均匀抽取；零权重不参与；无有效候选默认报告错误。', schema: { ...poolFields,
-            outVar: { type: 'variable', label: '结果变量（可空，仅返回）' }, outIdVar: { type: 'variable', label: '行ID变量（文本，可空）' }, ...resultFields,
-        }, returns: { type: 'string', label: '抽中内容；失败空串，配合成功状态' }, async run(ctx, p) {
+    static randPick = method({ id: 'rand-pick', title: '列表随机（安科式）', description: '支持1～100次文字抽取。允许重复时每抽保持原概率；同批不重复按剩余行的原概率重新归一化。weight 填10%预留概率。', schema: { ...poolFields,
+            ...drawFields,
+            outVar: { type: 'variable', label: '结果变量（单条文字／批量JSON文本，可空）' },
+            outIdVar: { type: 'variable', label: '行ID变量（单条ID／批量JSON文本，可空）' },
+            prefix: { type: 'string', label: '批量逐条输出前缀（可空，写入 前缀_1..N 文本变量）', default: '' }, ...resultFields,
+        }, returns: { type: 'string', label: '单条文字／批量JSON数组；失败空串，配合成功状态' }, async run(ctx, p) {
+            const count = p.count ?? 1;
+            const names = Number.isInteger(count) && count > 1 && count <= 100 && p.prefix?.trim()
+                ? Array.from({ length: count }, (_, i) => `${p.prefix.trim()}_${i + 1}`) : [];
             try {
-                outputs(ctx, p, 'string', [p.outIdVar].filter(Boolean));
+                outputs(ctx, p, 'string', [p.outIdVar, ...names].filter(Boolean));
                 compatible(ctx, p.outIdVar, 'string');
-                const report = await poolReport(ctx, p), active = report.candidates.filter(c => c.probability > 0);
-                if (p.outIdVar && active.some(c => !c.id))
-                    reject('候选缺少行ID');
-                let roll = Math.random();
-                const chosen = active.find(c => { roll -= c.probability; return roll < 0; }) ?? active[active.length - 1];
-                const writes: [
-                    string,
-                    VariableValue
-                ][] = [];
-                if (p.outVar)
-                    writes.push([p.outVar, chosen.value]);
-                if (p.outIdVar)
-                    writes.push([p.outIdVar, chosen.id]);
+                for (const name of names) {
+                    if (ctx.variables.get(name) === undefined)
+                        reject(`请先声明批量文本变量「${name}」`);
+                    compatible(ctx, name, 'string');
+                }
+                const chosen = await drawPool(ctx, p);
+                const value = count === 1 ? chosen[0].value : JSON.stringify(chosen.map(c => c.value));
+                const ids = count === 1 ? chosen[0].id : JSON.stringify(chosen.map(c => c.id));
+                const writes: [string, VariableValue][] = names.map((name, i) => [name, chosen[i].value]);
+                if (p.outVar) writes.push([p.outVar, value]);
+                if (p.outIdVar) writes.push([p.outIdVar, ids]);
                 writeAll(ctx, writes);
                 status(ctx, p);
-                return chosen.value;
+                return value;
             }
             catch (e) {
-                failed(ctx, p, '列表随机', e, [p.outIdVar]);
+                failed(ctx, p, '列表随机', e, [p.outIdVar, ...names]);
                 return '';
             }
         } });
-    static previewPool = method({ id: 'preview-pool', title: '检查候选池与概率', description: '按当前变量计算概率，不抽取；返回JSON文本报告。', schema: { ...poolFields, outVar: { type: 'variable', label: '报告变量（文本，可空）' }, ...resultFields }, returns: { type: 'string', label: '概率报告JSON' }, async run(ctx, p) {
+    static randPickNumber = method({ id: 'rand-pick-number', title: '列表随机（数值／公式）', description: '按权重抽取数字或公式结果，支持整数与小数。批量结果写入前缀数值变量；可选重复规则。', schema: {
+            ...poolFields, ...drawFields,
+            outVar: { type: 'variable', label: '单次数值结果变量', visibleWhen: { field: 'count', equals: 1 } },
+            prefix: { type: 'string', label: '批量数值前缀（数量大于1时必填）', default: '' },
+            reportVar: { type: 'variable', label: '完整数值数组（JSON文本，可空）' },
+            outIdVar: { type: 'variable', label: '行ID变量（单条ID／批量JSON文本，可空）' }, ...resultFields,
+        }, returns: { type: 'number', label: '单次数值／批量数量；失败-1，配合成功状态' }, async run(ctx, p) {
+            const count = p.count ?? 1;
+            const names = Number.isInteger(count) && count > 1 && count <= 100 && p.prefix?.trim()
+                ? Array.from({ length: count }, (_, i) => `${p.prefix.trim()}_${i + 1}`) : [];
+            const output = { ...p, outVar: count === 1 ? p.outVar : undefined };
+            try {
+                outputs(ctx, output, 'number', [p.reportVar, p.outIdVar, ...names].filter(Boolean));
+                compatible(ctx, p.reportVar, 'string');
+                compatible(ctx, p.outIdVar, 'string');
+                if (count > 1 && !p.prefix?.trim()) reject('数值批量抽取需要前缀');
+                for (const name of names) {
+                    if (ctx.variables.get(name) === undefined) reject(`请先声明批量数值变量「${name}」`);
+                    compatible(ctx, name, 'number');
+                }
+                const chosen = await drawPool(ctx, p, true), values = chosen.map(c => c.numberValue);
+                const writes: [string, VariableValue][] = names.map((name, i) => [name, values[i]]);
+                if (output.outVar) writes.push([output.outVar, values[0]]);
+                if (p.reportVar) writes.push([p.reportVar, JSON.stringify(values)]);
+                if (p.outIdVar) writes.push([p.outIdVar, count === 1 ? chosen[0].id : JSON.stringify(chosen.map(c => c.id))]);
+                writeAll(ctx, writes);
+                status(ctx, output);
+                return count === 1 ? values[0] : count;
+            }
+            catch (e) {
+                failed(ctx, output, '数值列表随机', e, [p.reportVar, p.outIdVar, ...names]);
+                return -1;
+            }
+        } });
+    static previewPool = method({ id: 'preview-pool', title: '检查候选池与概率', description: '检查固定概率与当前动态权重的分配，不抽取；返回JSON文本报告。', schema: { ...poolFields, outVar: { type: 'variable', label: '报告变量（文本，可空）' }, ...resultFields }, returns: { type: 'string', label: '概率报告JSON' }, async run(ctx, p) {
             try {
                 outputs(ctx, p, 'string');
                 const text = JSON.stringify(await poolReport(ctx, p));

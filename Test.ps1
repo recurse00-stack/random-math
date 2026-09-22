@@ -26,6 +26,7 @@ try {
     Invoke-Check 'typecheck' 'node' @('node_modules/typescript/bin/tsc','--noEmit')
     Invoke-Check 'existing-logic' 'node' @('--import','./_test/register-sdk.mjs','_test/run-tests.mjs')
     Invoke-Check 'repair-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/repair.test.mjs')
+    Invoke-Check 'deck-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/deck.test.mjs')
     Invoke-Check 'postbuild-regression' 'node' @('_test/postbuild.test.mjs')
     $js=(Get-FileHash -LiteralPath 'dist/index.js' -Algorithm SHA256).Hash
     $mjs=(Get-FileHash -LiteralPath 'dist/index.mjs' -Algorithm SHA256).Hash
