@@ -1,0 +1,816 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>随机与计算系统 · AI 使用指南</title><style>body{max-width:1100px;margin:auto;padding:32px 20px;font:16px/1.8 system-ui,"Microsoft YaHei",sans-serif;color:#243431;background:#fffefb}h2{margin-top:40px;color:#145c4d}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ccd8cf;padding:9px;text-align:left;overflow-wrap:anywhere}th,pre{background:#edf3ef}pre{padding:18px;white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}a{color:#176c5b}</style><h1 id="221-ai">随机与计算系统 2.2.1 · AI 使用指南</h1>
+<p>适用扩展：<code>mixing-entropy.random-math</code>，插件版本2.2.1。文档修订：2026-09-26。</p>
+<p>本文件供协助创作者编排 LetsGal 剧本的 AI 阅读，不是插件源码维护记录。人类教程另见 <code>USER-GUIDE.md</code> 或离线 <code>creator-guide.html</code>。将本文件提供给 AI，或由有文件访问能力的工具读取；文件随包提供不代表 Studio 的 AI 助手必然会自动加载它。</p>
+<p>推荐安装步骤见 <a href="AI-INTEGRATION.md">AI 接入说明</a>：有 letsgal-authoring 主 Skill 时，优先放入其按插件 ID/版本分开的统一用户区；没有时，独立安装 letsgal-plugin-random-math 到所用 AI 的技能目录。项目规则和上传指南保留为备用。安装 LetsGal 插件本体不等于安装或加载了这份 Skill；本版不接入 LetsGal 内置文档助手。</p>
+<h2 id="1">1. 使用前核对</h2>
+<ol>
+<li>核对项目实际启用的扩展 ID 与版本，再读取当前宿主提供的方法及参数。本文以2.2.1参数为准。抽取池和数组功能在2.2.0已经提供；2.2.1主要补充候选提示、手册与AI资料，不要把这些运行功能误写成2.2.1首次新增。其他旧版本仍须核对其实际方法。</li>
+<li>先理解用户需要的是一次判定、同批去重、跨调用抽取消费、动态事件资格，还是计算。不要把它们合并成同一种“随机”。</li>
+<li>确认项目现有变量的名字、类型、作用域与保存范围；只补缺少的变量，不覆盖同名变量和已有存档。输出变量必须存在且类型正确，同一调用的输出名称不能冲突。</li>
+<li>使用宿主公开的编辑/调用接口。需要写剧本文件时，先读取该版本剧本格式及一个实际可工作的“调用扩展方法”块，保留原节点身份。下文的参数对象是语义示例，不是可以直接导入的完整剧本 JSON。</li>
+<li>变量选择参数应按当前宿主的变量引用格式填写。不要把本文的示例名称直接冒充内部 UUID；也不要把结果值填到变量选择位置。</li>
+<li>表功能需要数据库依赖绑定。仅看到数据表或方法选项，不等于预览与导出运行接口已通过。</li>
+</ol>
+<h3 id="11">1.1 升级时区分本机库与工程发行物</h3>
+<p>Studio 2.2.0-beta.1 已实测本地2.2.0→2.2.1升级：当前工程已含同ID发行物时，复制导入ZIP可能报重复ID；在未加入本插件的临时工程导入新版并确认覆盖本机库，然后切回原工程，通过“改用这份本机源码 → 替换项目发行物”更新。必须核对两边版本及来源，先保留工程和旧存档；不要改ID、删项目插件目录或重建游戏来绕过错误。源码关联用户须先核对自有修改，不盲目覆盖。</p>
+<p>本机库已更新不等于工程已经使用新版。合成验收中，旧卡片／变量文件哈希保持一致，旧存档读回 first=B、left=2，续抽 second=C、left=1、ok=true。只证明本次本地更新与这一固定池续抽案例；不冒充工坊在线升级、全部固定序列或其他平台验收。完整人类步骤见 USER-GUIDE.md 第2.1节。AI资料副本仍须按 AI-INTEGRATION.md 单独更新。</p>
+<h2 id="2">2. 功能选择与边界</h2>
+<table>
+<thead>
+<tr>
+<th>用户意图</th>
+<th>采用方案</th>
+<th>不能误写成</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>掷骰、范围数值</td>
+<td><code>rand</code>，<code>mode=fresh</code></td>
+<td>读取结果变量就会再次随机</td>
+</tr>
+<tr>
+<td>第一次抽定，当前存档沿用</td>
+<td><code>rand</code>，<code>mode=sticky</code>，独立 <code>fixedKey</code></td>
+<td>跨存档全局防重、不可读档重抽</td>
+</tr>
+<tr>
+<td>一次抽多项，本批不重复</td>
+<td><code>rand-pick</code> / <code>rand-pick-number</code>，<code>replacement=without</code></td>
+<td>下一次调用仍记住上一批</td>
+</tr>
+<tr>
+<td>多次调用持续移除已抽项</td>
+<td><code>deck-create</code> → 多次 <code>deck-draw</code></td>
+<td>每次抽前重建池</td>
+</tr>
+<tr>
+<td>洗牌一次，按顺序抽</td>
+<td>抽取池 <code>mode=fixed</code></td>
+<td>不管读回哪个时点都固定相同结果</td>
+</tr>
+<tr>
+<td>读档后允许从剩余项重新随机</td>
+<td>抽取池 <code>mode=remaining</code></td>
+<td>真随机/硬件熵、保证下次不同</td>
+</tr>
+<tr>
+<td>执行片段后改变事件资格</td>
+<td>普通列表的权重表达式读变量；片段结束时显式修改变量</td>
+<td>插件自动监听任意片段完成，或自动修改已建抽取池</td>
+</tr>
+<tr>
+<td>运行时随意增删改候选行</td>
+<td>当前插件没有对应方法；先解释限制</td>
+<td>凭空调用 <code>add-item</code>、<code>remove-item</code>、<code>update-weight</code></td>
+</tr>
+<tr>
+<td>读JSON数组中的第几项</td>
+<td>使用宿主已验证的数组能力；或建立抽取池逐项取出</td>
+<td>凭空增加本插件的数组下标方法</td>
+</tr>
+</tbody>
+</table>
+<p>扩展方法的完整引用采用 <code>&lt;扩展ID&gt;/&lt;方法ID&gt;</code>，例如 <code>mixing-entropy.random-math/deck-draw</code>。宿主调用块的字段名和参数封装必须以实际格式为准。</p>
+<h2 id="3">3. 数据、绑定和输出</h2>
+<h3 id="31">3.1 数据表依赖</h3>
+<table>
+<thead>
+<tr>
+<th>逻辑别名</th>
+<th>显示名</th>
+<th>契约</th>
+<th>接受版本</th>
+<th>读写</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pickTable</code></td>
+<td>随机候选表</td>
+<td><code>mixing-entropy.random-math.pick-table</code></td>
+<td><code>^1.0.0</code></td>
+<td>只读</td>
+</tr>
+<tr>
+<td><code>funcLib</code></td>
+<td>函数规则表</td>
+<td><code>mixing-entropy.random-math.func-lib</code></td>
+<td><code>^1.0.0</code></td>
+<td>只读</td>
+</tr>
+</tbody>
+</table>
+<p>宿主负责寻找兼容表、创建模板和绑定。别名不是文件路径或表标题，重命名普通数据表不会自动让它兼容。当前插件只有一个 <code>pickTable</code> 绑定位置，不能在每个方法卡片任意指定一张不同的表。不要绕过绑定直接读取项目数据库文件。</p>
+<p>候选表基础字段为 <code>pool</code>（分组文字）、<code>label</code>（候选内容）、<code>weight</code>（数字、表达式或固定百分比），记录还有宿主生成的稳定 <code>id</code>。函数表字段为 <code>name</code>、<code>expr</code>、<code>desc</code>。<code>field</code> 默认 <code>label</code>，指定的是读取哪列，不是结果变量或池名。额外输出列必须使用表中真实字段名。</p>
+<p><code>poolScope=named</code> 按 <code>pool</code> 筛选，但 <code>pool</code> 空时兼容全表；<code>default</code> 仅空池名；<code>all</code> 是已绑定候选表的全部池，不是项目所有表。编辑器的“搜索这张表”是多字段关键词筛选，不能当作运行时精确池选择。</p>
+<h3 id="32">3.2 变量与错误</h3>
+<p>每次调用建议填写开关 <code>successVar</code> 和文本 <code>errorVar</code>。成功清空错误；正常配置失败保留旧结果，所以不能把结果不为空当成成功，也不能只凭返回值 <code>-1</code> 判错（合法计算也可能得到-1）。先检查状态，再使用结果。</p>
+<p>数值方法使用数值变量；文字结果、JSON数组和报告使用文本变量。JSON数组不是宿主原生数组变量。例如文本值 <code>"[1,2,3]"</code> 描述存储类型，实际字段中填写 <code>[1,2,3]</code>，不能多包一层字符串引号。数组输入只支持同一结果类型的值，不接受任意对象；<code>arrayVar</code> 选定后优先于 <code>arrayJson</code>，不是两者合并。</p>
+<p>批量前缀 <code>item</code> 对应 <code>item_1</code>、<code>item_2</code>……；必须预先建立全部逐项变量。四种输出规则不能混用：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th><code>count=1</code></th>
+<th><code>count&gt;1</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rand</code></td>
+<td>数值 <code>outVar</code>；<code>reportVar</code>也是JSON数组</td>
+<td><code>prefix</code>或<code>reportVar</code>至少一个；返回数量</td>
+</tr>
+<tr>
+<td><code>rand-pick</code></td>
+<td>文本 <code>outVar</code></td>
+<td><code>outVar</code>写JSON文本；可加文本<code>prefix</code>；返回JSON文本</td>
+</tr>
+<tr>
+<td><code>rand-pick-number</code></td>
+<td>数值 <code>outVar</code></td>
+<td>数值<code>prefix</code>必填，即使已填<code>reportVar</code>；返回数量</td>
+</tr>
+<tr>
+<td><code>deck-draw</code></td>
+<td><code>outVar</code>取决于池的数值/文字类型；返回JSON数组文本</td>
+<td>逐项<code>prefix</code>和/或JSON<code>reportVar</code>接结果；不要把多项塞进单项<code>outVar</code></td>
+</tr>
+</tbody>
+</table>
+<p>列表单次 <code>outIdVar</code> 是普通ID文本；列表批量及抽取池 <code>outIdVar</code> 是JSON ID数组。报告变量和方法返回值并不总是相同：建池的 <code>outVar</code> 是完整池报告，而返回值是数量。</p>
+<h2 id="4">4. 权重与概率规则</h2>
+<ul>
+<li>全部权重未填时均匀抽取；部分填写时空权重按0。</li>
+<li><code>10</code> 是相对权重，<code>10%</code> 是固定概率。百分号后缀只接受数字，不能写 <code>var("rate")%</code>；计算表达式没有取模运算。</li>
+<li>先分配固定概率，余量由相对权重分摊。例如 <code>10%</code>、<code>2</code>、<code>3</code> 对应10%、36%、54%。</li>
+<li><code>var("变量名")</code> 每次普通列表调用读取当前变量；缺变量、坏表达式、负数和非有限值会失败。</li>
+<li>固定概率总和超过100%失败；恰好100%时相对权重不参与。剩余概率大于0却没有正相对权重时默认失败。</li>
+<li><code>emptyPolicy=uniform</code> 只能在明确需要时采用；它不会修复坏表达式或负权重，也不会覆盖固定概率使 <code>0%</code> 重新参与。</li>
+<li>同批无放回抽取的后续概率会变化，重复规则按行区分；同内容不等于同一行。</li>
+<li>概率检查用 <code>preview-pool</code>，不消耗抽取池。少量试抽不用于证明概率正确。</li>
+</ul>
+<h2 id="5">5. 抽取池、保存和片段反馈</h2>
+<h3 id="51">5.1 生命周期</h3>
+<p>给每轮/事件池设置明确 <code>key</code>（1～128字符）。建立一次，然后按需要取出；同名池已存在时再次建立报错。取完不会自动补回；要求数量大于余量时整次失败，不部分扣除。<code>deck-peek</code> 不消耗；<code>deck-reset</code> 删除对应池后才能开始新轮，不清空结果变量。</p>
+<p>建池时将候选内容、权重和公式结果做成快照；之后原表、原数组变量、权重变量变化均不修改已建池。默认 <code>uniqueBy=value</code> 合并相同结果并合并权重；<code>row</code> 保留相同内容的不同副本。数值按计算结果去重，文字区分大小写和空格。</p>
+<p><code>fixed</code> 在建池时确定完整顺序，之后依次取出；<code>remaining</code> 在每次取出时从剩余候选中随机选择并移除。均是伪随机，不提供安全随机保证。池状态随当前槽存档；读回抽取前存档会恢复当时未消费的内容。普通文本源数组不会被插件改写。</p>
+<p><code>sticky</code> 的固定数值记录与抽取池是两套状态。<code>fixedKey</code> 为空时按 <code>value:outVar</code>、<code>batch:prefix</code>、<code>array:reportVar</code> 派生；复用输出变量可能意外复用固定记录，因此独立事件建议显式命名。<code>fixedPolicy=adopt</code> 只在明确继承合法旧结果时使用，不能把默认值当作已抽结果。</p>
+<h3 id="52">5.2 执行片段后的自动反馈范例</h3>
+<p>目标：完成“调查房间”片段后不再抽到它，并解锁“查看线索”。采用普通列表和变量权重，不采用冻结候选的不重复抽取池。</p>
+<p>准备当前存档数值变量 <code>room_available=1</code>、<code>clue_available=0</code>，以及文本 <code>picked</code>、开关 <code>ok</code>、文本 <code>error</code>。表数据：</p>
+<table>
+<thead>
+<tr>
+<th>pool</th>
+<th>label</th>
+<th>weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>explore</td>
+<td>调查房间</td>
+<td><code>var("room_available")</code></td>
+</tr>
+<tr>
+<td>explore</td>
+<td>查看线索</td>
+<td><code>var("clue_available")</code></td>
+</tr>
+<tr>
+<td>explore</td>
+<td>结束探索</td>
+<td><code>1</code></td>
+</tr>
+</tbody>
+</table>
+<p>调用 <code>rand-pick</code>，<code>poolScope=named</code>、<code>pool=explore</code>、<code>field=label</code>、<code>count=1</code>、<code>outVar=picked</code>、<code>successVar=ok</code>、<code>errorVar=error</code>。先判断 <code>ok</code>，成功后根据 <code>picked</code> 显式分支到片段。候选文字或行ID不会自动变成片段跳转。</p>
+<p>在“调查房间”真正完成的出口，使用宿主的设置变量操作将 <code>room_available=0</code>、<code>clue_available=1</code>，然后返回抽取处。中断/放弃的出口不要误执行完成反馈。下一次普通列表调用才应用新权重；已抽出的当前结果不会回溯改变。保留“结束探索”权重1可避免全部事件关闭后全零报错。</p>
+<p>若事件允许再次解锁，再由用户指定的剧情条件恢复变量。不要宣称插件有片段完成监听器、自动回调注册接口或运行时行修改功能。修改变量是作者显式配置的剧情操作。</p>
+<h2 id="6">6. 可复制的参数意图范例</h2>
+<p>以下对象用于核对参数含义，<strong>不是完整剧本文件或可直接导入的节点</strong>；变量项需转换成宿主实际引用形式。</p>
+<h3 id="_1">六面骰</h3>
+<pre><code class="language-json">{&quot;method&quot;:&quot;mixing-entropy.random-math/rand&quot;,&quot;params&quot;:{&quot;mode&quot;:&quot;fresh&quot;,&quot;min&quot;:1,&quot;max&quot;:6,&quot;digits&quot;:0,&quot;includeMin&quot;:true,&quot;includeMax&quot;:true,&quot;count&quot;:1,&quot;outVar&quot;:&quot;roll&quot;,&quot;successVar&quot;:&quot;ok&quot;,&quot;errorVar&quot;:&quot;error&quot;}}
+</code></pre>
+<p>准备数值<code>roll=0</code>、开关<code>ok=false</code>、文本<code>error=""</code>；先判断<code>ok</code>，再判断<code>roll&gt;=4</code>进入成功剧情。测试范围反向时应报错并保留旧roll。</p>
+<h3 id="_2">三事件一轮不重复</h3>
+<pre><code class="language-json">{&quot;method&quot;:&quot;mixing-entropy.random-math/deck-create&quot;,&quot;params&quot;:{&quot;key&quot;:&quot;events&quot;,&quot;source&quot;:&quot;array&quot;,&quot;arrayJson&quot;:&quot;[\&quot;调查\&quot;,\&quot;休息\&quot;,\&quot;交谈\&quot;]&quot;,&quot;valueType&quot;:&quot;text&quot;,&quot;mode&quot;:&quot;fixed&quot;,&quot;uniqueBy&quot;:&quot;value&quot;,&quot;successVar&quot;:&quot;ok&quot;,&quot;errorVar&quot;:&quot;error&quot;}}
+</code></pre>
+<p>建池成功后才进入循环。文本<code>picked</code>、数值<code>left</code>预先创建，每次调用：</p>
+<pre><code class="language-json">{&quot;method&quot;:&quot;mixing-entropy.random-math/deck-draw&quot;,&quot;params&quot;:{&quot;key&quot;:&quot;events&quot;,&quot;count&quot;:1,&quot;outVar&quot;:&quot;picked&quot;,&quot;remainingVar&quot;:&quot;left&quot;,&quot;successVar&quot;:&quot;ok&quot;,&quot;errorVar&quot;:&quot;error&quot;}}
+</code></pre>
+<p>成功时按picked显式分支；完成后left&gt;0继续，left=0结束。不要再次经过建池卡片。新轮使用<code>deck-reset</code>且key仍为events，再建池。要允许读档重抽剩余项，只将建池mode改为remaining，已有池需先按用户意图结束/重置。</p>
+<h2 id="7">7. 公式和计算</h2>
+<p><code>calc</code>支持加、减、乘、除、幂、平方根、向下取整、四舍五入，以及函数表中的自定义函数。普通计算传<code>a/b</code>，平方根/取整只使用<code>a</code>；自定义函数用<code>op=func</code>、<code>funcName</code>和<code>x/y/z/w</code>。</p>
+<p>表达式只支持白名单：数值、<code>x/y/z/w</code>、<code>+ - * / ^</code>、括号、比较与三元条件、<code>sqrt/pow/floor/round/min/max/clamp</code>、<code>var("name")</code>和已定义表函数。幂右结合且优先于负号；负数底数应加括号。禁止递归，不是JavaScript环境，无任意脚本、网络或文件能力。</p>
+<p>例：函数<code>damage</code>的expr为<code>max(0,round(x*y-z))</code>；x=20、y=1.5、z=4得到26。不能用数值字符串拼接文本或把任意对象传给公式。</p>
+<h2 id="8">8. 验证与交付给用户</h2>
+<p>规模边界：单次抽取1～100整数；范围随机精度0～6且每个放大后端点绝对值不超过2^48。单表/单池最多10000项，同一存档最多100个抽取池、剩余项合计最多20000；空池仍占名额，删除需明确调用重置。数组输入最多1000000字符，池存档合计最多4000000字符。固定随机记录最多10000条。不要并行操作同一实例的抽取池方法。</p>
+<p>函数表最多1000行，表达式最多4096字符，解析深度和调用深度最多32，每次求值最多4096次函数调用。除零、非有限结果和非法定义必须走错误分支。数值列表会先验证候选公式，不能假设权重为0就可以保留坏公式。</p>
+<ul>
+<li>最小验证先查成功状态、变量类型、范围；再测试无效参数时旧结果没有冒充新结果。</li>
+<li>表格案例查绑定和概率报告；片段反馈案例核对修改前后候选资格，不能只看参数文字。</li>
+<li>抽取池查数量、去重、抽空、重置和真实存读档。需导出时再查目标播放器。</li>
+<li>程序模拟只能证明插件逻辑在该模拟上下文下通过，不能证明Studio数据库接口、界面操作、存档或导出可用。不要写没有执行过的PASS。</li>
+<li>Studio 2.0.0曾存在“当前宿主没有为数据依赖提供项目数据库能力”的已复现问题。2.2.0-beta.1合成工程的实时预览及本次Windows独立播放器已通过文字／数值批量与函数表求和的条件检查；其他宿主／平台仍须单独验证。出错时保留信息，不修改SDK或绕过项目数据权限。</li>
+<li>最终向创作者说明增加了哪些变量、表行、调用与分支，反馈发生在哪个出口，失败走哪里，以及哪些检查尚未执行。不要以“已写文档”冒充功能已发布。</li>
+</ul>
+<h2 id="9">9. 方法与参数完整索引</h2>
+<p>以下索引从2.2.1实际方法定义提取。<code>variable</code>表示变量选择项；省略可选输出表示不写该变量。显示条件只控制编辑器显示，不代表可以忽略类型或运行约束。没有默认值的参数不应凭空补一个。</p>
+<h3 id="deck-create">建立不重复抽取池 <code>deck-create</code></h3>
+<p>从候选表或JSON数组建立持久抽取池。重复建立同名池会报错，重开一轮须先重置。</p>
+<p>返回：<code>number</code>；池内项目数量；失败-1。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td>string；默认<code>""</code></td>
+<td>抽取池名称（独立命名，随存档）；必填</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>enum；默认<code>"table"</code></td>
+<td>来源；选项 <code>table</code> 随机候选表、<code>array</code> JSON数组</td>
+</tr>
+<tr>
+<td><code>poolScope</code></td>
+<td>enum；默认<code>"named"</code></td>
+<td>候选范围；选项 <code>named</code> 指定池（空名称兼容全表）、<code>default</code> 仅未命名池、<code>all</code> 全部池</td>
+</tr>
+<tr>
+<td><code>pool</code></td>
+<td>string；默认<code>""</code></td>
+<td>池名；显示条件<code>{"field": "poolScope", "equals": "named"}</code></td>
+</tr>
+<tr>
+<td><code>field</code></td>
+<td>string；默认<code>"label"</code></td>
+<td>输出列</td>
+</tr>
+<tr>
+<td><code>emptyPolicy</code></td>
+<td>enum；默认<code>"error"</code></td>
+<td>剩余概率无正权重时；选项 <code>error</code> 不抽取并报告错误、<code>uniform</code> 明确允许均匀回退</td>
+</tr>
+<tr>
+<td><code>arrayJson</code></td>
+<td>string；默认<code>""</code></td>
+<td>JSON数组（如 ["A","B","C"] 或 [1,2,3]）；显示条件<code>{"field": "source", "equals": "array"}</code></td>
+</tr>
+<tr>
+<td><code>arrayVar</code></td>
+<td>variable；未声明默认值</td>
+<td>从文本变量读取JSON数组（优先于上方文本）；显示条件<code>{"field": "source", "equals": "array"}</code></td>
+</tr>
+<tr>
+<td><code>valueType</code></td>
+<td>enum；默认<code>"text"</code></td>
+<td>结果类型；选项 <code>text</code> 文字、<code>number</code> 数值（表中允许公式）</td>
+</tr>
+<tr>
+<td><code>mode</code></td>
+<td>enum；默认<code>"fixed"</code></td>
+<td>抽取方式；选项 <code>fixed</code> 建立时洗牌，之后依次抽取、<code>remaining</code> 每次从剩余项随机抽取（可读档重抽）</td>
+</tr>
+<tr>
+<td><code>uniqueBy</code></td>
+<td>enum；默认<code>"value"</code></td>
+<td>相同内容处理；选项 <code>value</code> 合并相同结果（权重相加，保留首项ID）、<code>row</code> 按行／数组位置区分（相同内容可再次出现）</td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>初始池报告（JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="deck-draw">从抽取池取出 <code>deck-draw</code></h3>
+<p>跨多次调用持续不重复。抽出的项目从当前槽的池中移除；余量不足整批失败，不自动补回。返回结果JSON数组。</p>
+<p>返回：<code>string</code>；结果JSON数组；失败空串。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td>string；默认<code>""</code></td>
+<td>抽取池名称（独立命名，随存档）；必填</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td>number；默认<code>1</code></td>
+<td>本次取出数量；最小1；最大100</td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>单项结果（文字／数值，与建池类型一致）；显示条件<code>{"field": "count", "equals": 1}</code></td>
+</tr>
+<tr>
+<td><code>prefix</code></td>
+<td>string；默认<code>""</code></td>
+<td>批量逐项前缀（可空，需预先声明 前缀_1…N）</td>
+</tr>
+<tr>
+<td><code>reportVar</code></td>
+<td>variable；未声明默认值</td>
+<td>本次结果数组（JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>outIdVar</code></td>
+<td>variable；未声明默认值</td>
+<td>本次行ID数组（JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>remainingVar</code></td>
+<td>variable；未声明默认值</td>
+<td>剩余数量（数值，可空）</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="deck-peek">查看抽取池／剩余数组 <code>deck-peek</code></h3>
+<p>不抽取、不洗牌。返回总数、已抽数量、剩余数值／文字数组和ID数组。</p>
+<p>返回：<code>string</code>；池报告JSON；失败空串。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td>string；默认<code>""</code></td>
+<td>抽取池名称（独立命名，随存档）；必填</td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>池报告（JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>arrayVar</code></td>
+<td>variable；未声明默认值</td>
+<td>仅剩余结果数组（JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>remainingVar</code></td>
+<td>variable；未声明默认值</td>
+<td>剩余数量（数值，可空）</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="deck-reset">重置／删除指定抽取池 <code>deck-reset</code></h3>
+<p>删除指定池记录；不清空已有结果变量。再次建立后开始新一轮。</p>
+<p>返回：<code>boolean</code>；是否成功。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td>string；默认<code>""</code></td>
+<td>抽取池名称（独立命名，随存档）；必填</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rand">随机数 <code>rand</code></h3>
+<p>按指定精度等概率抽取。单次返回结果，批量返回数量。固定结果随存档保存。</p>
+<p>返回：<code>number</code>；单次值／批量数量；失败-1，配合成功状态。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mode</code></td>
+<td>enum；默认<code>"fresh"</code></td>
+<td>模式；必填；选项 <code>fresh</code> 每次重抽、<code>sticky</code> 首次抽取后固定（随存档）</td>
+</tr>
+<tr>
+<td><code>min</code></td>
+<td>number；默认<code>0</code></td>
+<td>最小值；必填</td>
+</tr>
+<tr>
+<td><code>max</code></td>
+<td>number；默认<code>100</code></td>
+<td>最大值；必填</td>
+</tr>
+<tr>
+<td><code>digits</code></td>
+<td>number；默认<code>0</code></td>
+<td>小数位数（0=整数）；最小0；最大6</td>
+</tr>
+<tr>
+<td><code>includeMin</code></td>
+<td>boolean；默认<code>true</code></td>
+<td>包含最小端点</td>
+</tr>
+<tr>
+<td><code>includeMax</code></td>
+<td>boolean；默认<code>true</code></td>
+<td>包含最大端点</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td>number；默认<code>1</code></td>
+<td>数量（大于1批量输出）；最小1；最大100</td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>单次结果变量；显示条件<code>{"field": "count", "equals": 1}</code></td>
+</tr>
+<tr>
+<td><code>prefix</code></td>
+<td>string；默认<code>""</code></td>
+<td>批量前缀（数量大于1时使用）</td>
+</tr>
+<tr>
+<td><code>reportVar</code></td>
+<td>variable；未声明默认值</td>
+<td>完整结果数组（JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>fixedKey</code></td>
+<td>string；默认<code>""</code></td>
+<td>固定记录名（空=结果变量或批量前缀）；显示条件<code>{"field": "mode", "equals": "sticky"}</code></td>
+</tr>
+<tr>
+<td><code>fixedPolicy</code></td>
+<td>enum；默认<code>"fresh"</code></td>
+<td>旧存档首次接入；选项 <code>fresh</code> 首次生成，忽略输出默认值、<code>adopt</code> 采用完整的既有结果；显示条件<code>{"field": "mode", "equals": "sticky"}</code></td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="reset-fixed">重置固定随机 <code>reset-fixed</code></h3>
+<p>移除指定固定记录，下次重抽；保留结果变量。</p>
+<p>返回：<code>boolean</code>；是否成功。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>key</code></td>
+<td>string；默认<code>""</code></td>
+<td>记录名（默认单次 value:变量名；批量 batch:前缀）；必填</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rand-pick">列表随机（安科式） <code>rand-pick</code></h3>
+<p>支持1～100次文字抽取。允许重复时每抽保持原概率；同批不重复按剩余行的原概率重新归一化。weight 填10%预留概率。</p>
+<p>返回：<code>string</code>；单条文字／批量JSON数组；失败空串，配合成功状态。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>poolScope</code></td>
+<td>enum；默认<code>"named"</code></td>
+<td>候选范围；选项 <code>named</code> 指定池（空名称兼容全表）、<code>default</code> 仅未命名池、<code>all</code> 全部池</td>
+</tr>
+<tr>
+<td><code>pool</code></td>
+<td>string；默认<code>""</code></td>
+<td>池名；显示条件<code>{"field": "poolScope", "equals": "named"}</code></td>
+</tr>
+<tr>
+<td><code>field</code></td>
+<td>string；默认<code>"label"</code></td>
+<td>输出列</td>
+</tr>
+<tr>
+<td><code>emptyPolicy</code></td>
+<td>enum；默认<code>"error"</code></td>
+<td>剩余概率无正权重时；选项 <code>error</code> 不抽取并报告错误、<code>uniform</code> 明确允许均匀回退</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td>number；默认<code>1</code></td>
+<td>抽取数量；最小1；最大100</td>
+</tr>
+<tr>
+<td><code>replacement</code></td>
+<td>enum；默认<code>"with"</code></td>
+<td>重复规则；选项 <code>with</code> 允许重复（每次概率不变）、<code>without</code> 同批不重复（按行排除，后续概率改变）</td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>结果变量（单条文字／批量JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>outIdVar</code></td>
+<td>variable；未声明默认值</td>
+<td>行ID变量（单条ID／批量JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>prefix</code></td>
+<td>string；默认<code>""</code></td>
+<td>批量逐条输出前缀（可空，写入 前缀_1..N 文本变量）</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rand-pick-number">列表随机（数值／公式） <code>rand-pick-number</code></h3>
+<p>按权重抽取数字或公式结果，支持整数与小数。批量结果写入前缀数值变量；可选重复规则。</p>
+<p>返回：<code>number</code>；单次数值／批量数量；失败-1，配合成功状态。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>poolScope</code></td>
+<td>enum；默认<code>"named"</code></td>
+<td>候选范围；选项 <code>named</code> 指定池（空名称兼容全表）、<code>default</code> 仅未命名池、<code>all</code> 全部池</td>
+</tr>
+<tr>
+<td><code>pool</code></td>
+<td>string；默认<code>""</code></td>
+<td>池名；显示条件<code>{"field": "poolScope", "equals": "named"}</code></td>
+</tr>
+<tr>
+<td><code>field</code></td>
+<td>string；默认<code>"label"</code></td>
+<td>输出列</td>
+</tr>
+<tr>
+<td><code>emptyPolicy</code></td>
+<td>enum；默认<code>"error"</code></td>
+<td>剩余概率无正权重时；选项 <code>error</code> 不抽取并报告错误、<code>uniform</code> 明确允许均匀回退</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td>number；默认<code>1</code></td>
+<td>抽取数量；最小1；最大100</td>
+</tr>
+<tr>
+<td><code>replacement</code></td>
+<td>enum；默认<code>"with"</code></td>
+<td>重复规则；选项 <code>with</code> 允许重复（每次概率不变）、<code>without</code> 同批不重复（按行排除，后续概率改变）</td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>单次数值结果变量；显示条件<code>{"field": "count", "equals": 1}</code></td>
+</tr>
+<tr>
+<td><code>prefix</code></td>
+<td>string；默认<code>""</code></td>
+<td>批量数值前缀（数量大于1时必填）</td>
+</tr>
+<tr>
+<td><code>reportVar</code></td>
+<td>variable；未声明默认值</td>
+<td>完整数值数组（JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>outIdVar</code></td>
+<td>variable；未声明默认值</td>
+<td>行ID变量（单条ID／批量JSON文本，可空）</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="preview-pool">检查候选池与概率 <code>preview-pool</code></h3>
+<p>检查固定概率与当前动态权重的分配，不抽取；返回JSON文本报告。</p>
+<p>返回：<code>string</code>；概率报告JSON。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>poolScope</code></td>
+<td>enum；默认<code>"named"</code></td>
+<td>候选范围；选项 <code>named</code> 指定池（空名称兼容全表）、<code>default</code> 仅未命名池、<code>all</code> 全部池</td>
+</tr>
+<tr>
+<td><code>pool</code></td>
+<td>string；默认<code>""</code></td>
+<td>池名；显示条件<code>{"field": "poolScope", "equals": "named"}</code></td>
+</tr>
+<tr>
+<td><code>field</code></td>
+<td>string；默认<code>"label"</code></td>
+<td>输出列</td>
+</tr>
+<tr>
+<td><code>emptyPolicy</code></td>
+<td>enum；默认<code>"error"</code></td>
+<td>剩余概率无正权重时；选项 <code>error</code> 不抽取并报告错误、<code>uniform</code> 明确允许均匀回退</td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>报告变量（文本，可空）</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="calc">计算 <code>calc</code></h3>
+<p>有限数值计算／无副作用的表函数。失败保留结果，成功状态=false。</p>
+<p>返回：<code>number</code>；计算结果；失败-1，配合成功状态。</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型／默认值</th>
+<th>用途与条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>op</code></td>
+<td>enum；默认<code>"add"</code></td>
+<td>运算；必填；选项 <code>add</code> 加 +、<code>sub</code> 减 −、<code>mul</code> 乘 ×、<code>div</code> 除 ÷、<code>pow</code> 幂、<code>root</code> 开方、<code>floor</code> 向下取整、<code>round</code> 四舍五入、<code>func</code> 自定义函数</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td>number；默认<code>0</code></td>
+<td>a（基础运算）</td>
+</tr>
+<tr>
+<td><code>b</code></td>
+<td>number；默认<code>1</code></td>
+<td>b（双目运算）</td>
+</tr>
+<tr>
+<td><code>funcName</code></td>
+<td>string；默认<code>""</code></td>
+<td>函数名；显示条件<code>{"field": "op", "equals": "func"}</code></td>
+</tr>
+<tr>
+<td><code>x</code></td>
+<td>number；默认<code>0</code></td>
+<td>x；显示条件<code>{"field": "op", "equals": "func"}</code></td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td>number；默认<code>0</code></td>
+<td>y；显示条件<code>{"field": "op", "equals": "func"}</code></td>
+</tr>
+<tr>
+<td><code>z</code></td>
+<td>number；默认<code>0</code></td>
+<td>z；显示条件<code>{"field": "op", "equals": "func"}</code></td>
+</tr>
+<tr>
+<td><code>w</code></td>
+<td>number；默认<code>0</code></td>
+<td>w；显示条件<code>{"field": "op", "equals": "func"}</code></td>
+</tr>
+<tr>
+<td><code>outVar</code></td>
+<td>variable；未声明默认值</td>
+<td>结果变量（可空，仅返回）</td>
+</tr>
+<tr>
+<td><code>successVar</code></td>
+<td>variable；未声明默认值</td>
+<td>成功状态写入（布尔，可空）</td>
+</tr>
+<tr>
+<td><code>errorVar</code></td>
+<td>variable；未声明默认值</td>
+<td>错误说明写入（文本，可空）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">检查器文字候选的边界（本地开发更新）</h2>
+<p>string 参数的 suggestions 只声明编辑期历史候选：池名 pool、输出列 candidate-field、抽取池名称 deck-key、固定记录 fixed-key、数值前缀 number-output-prefix、文字前缀 text-output-prefix、抽取池前缀 deck-output-prefix、函数 function。同 key 在插件内复用，不能跨不同语义混用。实际候选由 Studio 从项目剧本已填值收集，不是数据库或存档实时枚举；变量仍用官方选择器。当前 SDK 没有自定义筛选或拼音匹配入口。Studio 2.2.0-beta.1 中文首字动态过滤已观察通过；人工已确认候选显示后鼠标点选不能回填。</p>
+<p>2026-09-26 真实宿主专项核查：官方示例式独立诊断扩展在原合成工程和仅启用必要组件的干净工程均各连续复现 3 次；另有 3 次鼠标失败逐次核对了磁盘旧值。直接定义、复用字段、默认值、必填、条件显示、检查器停靠位置、条件参数弹窗、新卡片和项目重开均未消除问题。对用户统一表述为“疑似 Studio 官方 Bug，等待官方修复”。独立复现证据指向扩展 string.suggestions 鼠标选择路径，尚未定位宿主内部代码原因，不能写成已确认某个焦点事件或插件已修复。</p>
+<p>展开候选后用 ↑／↓ 选择高亮项并按 Enter，或完整手填；键盘回填、保存、切卡和项目重开已核对，诊断方法在编辑器预览收到的字符串也与保存值一致。该结果不是全部 19 字段逐项 GUI 验收，也不是独立游戏运行／导出验收。Esc 关闭候选但不撤销输入；不要用直接写 JSON 或设置控件值冒充鼠标通过。</p>
+<p>当前公开方法 schema 未提供替换其选择处理的接口，不能以动态检查器或固定枚举接管任意文本。全拼和拼音首字母不在本版范围。运行时方法、参数类型与取值不变；旧存档和手填名称继续有效。</p></html>

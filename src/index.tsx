@@ -602,7 +602,7 @@ function fixedState(owner: unknown) {
 const poolFields = {
     poolScope: { type: 'enum', label: '候选范围', default: 'named', options: [{ label: '指定池（空名称兼容全表）', value: 'named' }, { label: '仅未命名池', value: 'default' }, { label: '全部池', value: 'all' }] },
     pool: { type: 'string', label: '池名', default: '', visibleWhen: { field: 'poolScope', equals: 'named' }, suggestions: { key: 'pool' } },
-    field: { type: 'string', label: '输出列', default: 'label' },
+    field: { type: 'string', label: '输出列', default: 'label', suggestions: { key: 'candidate-field' } },
     emptyPolicy: { type: 'enum', label: '剩余概率无正权重时', default: 'error', options: [{ label: '不抽取并报告错误', value: 'error' }, { label: '明确允许均匀回退', value: 'uniform' }] },
 } as const satisfies BlockSchema;
 type PoolInput = {
@@ -777,12 +777,12 @@ async function deckCandidates(ctx: Context, p: PoolInput & { source?: string; ar
     }
     return uniqueItems(items, p.uniqueBy ?? 'value');
 }
-const deckKeyField = { key: { type: 'string', label: '抽取池名称（独立命名，随存档）', required: true, default: '' } } as const satisfies BlockSchema;
+const deckKeyField = { key: { type: 'string', label: '抽取池名称（独立命名，随存档）', required: true, default: '', suggestions: { key: 'deck-key' } } } as const satisfies BlockSchema;
 
 @extension({ id: 'random-math', label: '随机与计算系统' })
 export class RandomMath extends Extension {
     static saveSchema = defineSave({ drawDecks: { type: 'list', persistence: 'slot', default: [] as string[], label: '不重复抽取池' }, fixedResults: { type: 'list', persistence: 'slot', default: [] as string[], label: '固定随机记录' } });
-    static settings = settings(s => ({ dslCheat: s.string('表达式语法速查').default('支持 + - * / ^、负数、比较和三元条件；幂优先且右结合。\n函数 sqrt pow floor round min max clamp、var("变量名")及表函数（禁止递归）。\n例 clamp(round(x*y),0,100)。候选表 weight 填 10% 锁定10%概率，数字或表达式分配剩余概率。% 只用于候选表数字后缀。固定结果跟随当前存档，读回抽取前存档会重抽。').multiline() }));
+    static settings = settings(s => ({ creatorHelp: s.string('创作者手册与 AI 指南').default('完整手册：工坊原插件详情页，或发行包 docs/creator-guide.html（可单独离线打开）。\n先看第1章术语、第3章掷骰、第4章不重复抽取；查找可直接跳到第几处并预览上下文。\nAI指南与人类手册分开：docs/AI-GUIDE.md；接入步骤见 docs/AI-INTEGRATION.md。插件安装不会自动安装AI技能。').multiline(), dslCheat: s.string('表达式语法速查').default('支持 + - * / ^、负数、比较和三元条件；幂优先且右结合。\n函数 sqrt pow floor round min max clamp、var("变量名")及表函数（禁止递归）。\n例 clamp(round(x*y),0,100)。候选表 weight 填 10% 锁定10%概率，数字或表达式分配剩余概率。% 只用于候选表数字后缀。固定结果跟随当前存档，读回抽取前存档会重抽。').multiline() }));
     static deckCreate = method({ id: 'deck-create', title: '建立不重复抽取池', description: '从候选表或JSON数组建立持久抽取池。重复建立同名池会报错，重开一轮须先重置。', schema: {
         ...deckKeyField,
         source: { type: 'enum', label: '来源', default: 'table', options: [{ label: '随机候选表', value: 'table' }, { label: 'JSON数组', value: 'array' }] },
@@ -818,7 +818,7 @@ export class RandomMath extends Extension {
         ...deckKeyField,
         count: { type: 'number', label: '本次取出数量', default: 1, min: 1, max: 100, step: 1 },
         outVar: { type: 'variable', label: '单项结果（文字／数值，与建池类型一致）', visibleWhen: { field: 'count', equals: 1 } },
-        prefix: { type: 'string', label: '批量逐项前缀（可空，需预先声明 前缀_1…N）', default: '' },
+        prefix: { type: 'string', label: '批量逐项前缀（可空，需预先声明 前缀_1…N）', default: '', suggestions: { key: 'deck-output-prefix' } },
         reportVar: { type: 'variable', label: '本次结果数组（JSON文本，可空）' },
         outIdVar: { type: 'variable', label: '本次行ID数组（JSON文本，可空）' },
         remainingVar: { type: 'variable', label: '剩余数量（数值，可空）' }, ...resultFields,
@@ -880,9 +880,9 @@ export class RandomMath extends Extension {
             digits: { type: 'number', label: '小数位数（0=整数）', default: 0, min: 0, max: 6, step: 1 },
             includeMin: { type: 'boolean', label: '包含最小端点', default: true }, includeMax: { type: 'boolean', label: '包含最大端点', default: true },
             count: { type: 'number', label: '数量（大于1批量输出）', default: 1, min: 1, max: 100, step: 1 },
-            outVar: { type: 'variable', label: '单次结果变量', visibleWhen: { field: 'count', equals: 1 } }, prefix: { type: 'string', label: '批量前缀（数量大于1时使用）', default: '' },
+            outVar: { type: 'variable', label: '单次结果变量', visibleWhen: { field: 'count', equals: 1 } }, prefix: { type: 'string', label: '批量前缀（数量大于1时使用）', default: '', suggestions: { key: 'number-output-prefix' } },
             reportVar: { type: 'variable', label: '完整结果数组（JSON文本，可空）' },
-            fixedKey: { type: 'string', label: '固定记录名（空=结果变量或批量前缀）', default: '', visibleWhen: { field: 'mode', equals: 'sticky' } },
+            fixedKey: { type: 'string', label: '固定记录名（空=结果变量或批量前缀）', default: '', visibleWhen: { field: 'mode', equals: 'sticky' }, suggestions: { key: 'fixed-key' } },
             fixedPolicy: { type: 'enum', label: '旧存档首次接入', default: 'fresh', visibleWhen: { field: 'mode', equals: 'sticky' }, options: [{ label: '首次生成，忽略输出默认值', value: 'fresh' }, { label: '采用完整的既有结果', value: 'adopt' }] }, ...resultFields,
         }, returns: { type: 'number', label: '单次值／批量数量；失败-1，配合成功状态' }, run(ctx, p) {
             const count = p.count ?? 1, names = count > 1 ? (Number.isInteger(count) && count <= 100 && p.prefix?.trim() ? Array.from({ length: count }, (_, i) => `${p.prefix.trim()}_${i + 1}`) : []) : p.outVar ? [p.outVar] : [];
@@ -957,7 +957,7 @@ export class RandomMath extends Extension {
             }
         } });
     static resetFixed = method({ id: 'reset-fixed', title: '重置固定随机', description: '移除指定固定记录，下次重抽；保留结果变量。', schema: {
-            key: { type: 'string', label: '记录名（默认单次 value:变量名；批量 batch:前缀）', required: true, default: '' }, ...resultFields,
+            key: { type: 'string', label: '记录名（默认单次 value:变量名；批量 batch:前缀）', required: true, default: '', suggestions: { key: 'fixed-key' } }, ...resultFields,
         }, returns: { type: 'boolean', label: '是否成功' }, run(ctx, p) { try {
             outputs(ctx, p, 'number');
             const key = p.key.trim();
@@ -976,7 +976,7 @@ export class RandomMath extends Extension {
             ...drawFields,
             outVar: { type: 'variable', label: '结果变量（单条文字／批量JSON文本，可空）' },
             outIdVar: { type: 'variable', label: '行ID变量（单条ID／批量JSON文本，可空）' },
-            prefix: { type: 'string', label: '批量逐条输出前缀（可空，写入 前缀_1..N 文本变量）', default: '' }, ...resultFields,
+            prefix: { type: 'string', label: '批量逐条输出前缀（可空，写入 前缀_1..N 文本变量）', default: '', suggestions: { key: 'text-output-prefix' } }, ...resultFields,
         }, returns: { type: 'string', label: '单条文字／批量JSON数组；失败空串，配合成功状态' }, async run(ctx, p) {
             const count = p.count ?? 1;
             const names = Number.isInteger(count) && count > 1 && count <= 100 && p.prefix?.trim()
@@ -1007,7 +1007,7 @@ export class RandomMath extends Extension {
     static randPickNumber = method({ id: 'rand-pick-number', title: '列表随机（数值／公式）', description: '按权重抽取数字或公式结果，支持整数与小数。批量结果写入前缀数值变量；可选重复规则。', schema: {
             ...poolFields, ...drawFields,
             outVar: { type: 'variable', label: '单次数值结果变量', visibleWhen: { field: 'count', equals: 1 } },
-            prefix: { type: 'string', label: '批量数值前缀（数量大于1时必填）', default: '' },
+            prefix: { type: 'string', label: '批量数值前缀（数量大于1时必填）', default: '', suggestions: { key: 'number-output-prefix' } },
             reportVar: { type: 'variable', label: '完整数值数组（JSON文本，可空）' },
             outIdVar: { type: 'variable', label: '行ID变量（单条ID／批量JSON文本，可空）' }, ...resultFields,
         }, returns: { type: 'number', label: '单次数值／批量数量；失败-1，配合成功状态' }, async run(ctx, p) {

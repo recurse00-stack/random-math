@@ -35,3 +35,13 @@
 runImmediately与普通run分离；skip显式转发run。通过SDK的getHost()只读探测当前宿主的application.scriptingSystem.getActiveSeekPurpose()；只有明确navigation才执行定位计算，archive-restore、snapshot-restore及未知宿主保留恢复状态。该宿主适配集中在isNavigationReplay，升级Studio须重新测试。不要依赖实例字段保存状态，宿主可能每次调用新建实例。
 
 完整Test.ps1包括58项原逻辑、173项既有回归、72项抽取池／数组／生命周期回归，以及类型与双入口构建检查。Node垫片不证明真实宿主数据库接口可用。Studio2.0.0数据接口缺失已在原2.1和本次2.2的Windows导出对照中复现；不得修改SDK或绕开数据绑定去直接读用户工程文件。范围与JSON数组路径独立验证。
+
+## 2.2.1 资料维护
+
+当前使用说明在USER-GUIDE.md，AI正文在AI-GUIDE.md及AI-INTEGRATION.md。先运行 scripts/build-creator-docs.py，生成HTML、工坊正文及Skill references；不要手改派生副本。人类资料与AI包分别交付。
+
+扩展设置新增creatorHelp，仅提供阅读位置，不参与随机算法或存档。检查器通过SDK的suggestions复用已填值；首字过滤由宿主完成，没有私有筛选器、实时表枚举或拼音接口。整条选择链路须依实际宿主证据核实。
+
+scripts/package.py --output-dir <新目录> 和 scripts/build-ai-kit.py <新ZIP> 均拒绝覆盖旧包；正文与Skill副本不一致时拒绝生成。完整包使用dist/index.js，工坊候选清单使用dist/index.mjs，两入口必须同字节。工坊README采用完整人类教程，图片路径以根目录docs/images为准；保持原插件ID，只更新原条目。
+
+2.2.1 的验证范围与缺口见VALIDATION-2.2.1.md。打包、安装、宿主运行、外部发布分别记录，不把历史记录或SDK模拟写成本次实机通过。AI Skill的统一管理目录优先、原生目录备用，安装说明见AI-INTEGRATION.md；此工程不修改另一主Skill工程或用户AI配置。

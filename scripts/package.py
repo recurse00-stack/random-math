@@ -3,17 +3,21 @@ from pathlib import Path
 import hashlib
 import json
 import zipfile
+import argparse
+import io
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = json.loads((ROOT / 'extension.json').read_text(encoding='utf-8'))['version']
-OUTPUT = ROOT / 'release'
-OUTPUT.mkdir(exist_ok=True)
-DOCS = ['README.md', 'CHANGELOG.md', 'RELEASE-NOTES.md', 'LICENSE',
-        'docs/USER-GUIDE.md', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md']
+DOCS = ['skills/letsgal-plugin-random-math/SKILL.md', 'skills/letsgal-plugin-random-math/references/AI-GUIDE.md', 'skills/letsgal-plugin-random-math/references/AI-INTEGRATION.md', 'docs/ai-integration/PLUGIN-INDEX.entry.md',
+        'README.md', 'CHANGELOG.md', 'RELEASE-NOTES.md', 'LICENSE',
+        'docs/USER-GUIDE.md', 'docs/creator-guide.html', 'docs/AI-GUIDE.md', 'docs/ai-guide.html',
+        'docs/AI-INTEGRATION.md', 'docs/ai-integration/AGENTS.append.md', 'docs/ai-integration/CLAUDE.append.md', 'docs/ai-integration/random-math.mdc', 'docs/ai-integration/CHAT-START.md',
+        'docs/images/variables.png', 'docs/images/new-variable.png',
+        'docs/images/method-picker.png', 'docs/images/candidate-table.png', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md', 'docs/VALIDATION-2.2.1.md']
 
-def archive(name, paths):
-    target = OUTPUT / name
-    with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED) as bundle:
+def archive(paths):
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as bundle:
         for relative in sorted(paths):
             source = ROOT / relative
             if source.is_symlink() or not source.is_file():
@@ -26,17 +30,39 @@ def archive(name, paths):
             info.create_system = 3
             info.external_attr = 0o100644 << 16
             bundle.writestr(info, data)
-    with zipfile.ZipFile(target) as bundle:
+    buffer.seek(0)
+    with zipfile.ZipFile(buffer) as bundle:
         assert bundle.testzip() is None
         assert sorted(bundle.namelist()) == sorted(paths)
-    return target
+    return buffer.getvalue()
 
-packages = [
-    archive(f'random-math-v{VERSION}.zip', DOCS + [
+def build(output):
+    names = [f'random-math-v{VERSION}.zip', f'random-math-v{VERSION}-docs.zip']
+    # Preflight every output, including checksums, before opening any file.
+    for name in names + ['SHA256SUMS.txt']:
+        target = output / name
+        if target.exists() or target.is_symlink():
+            raise FileExistsError(f'Refusing to overwrite {target}; use --output-dir with a fresh directory')
+    for name in ['AI-GUIDE.md', 'AI-INTEGRATION.md']:
+        canonical = (ROOT / 'docs' / name).read_bytes().replace(b'\r\n', b'\n')
+        reference = (ROOT / 'skills/letsgal-plugin-random-math/references' / name).read_bytes().replace(b'\r\n', b'\n')
+        if canonical != reference:
+            raise ValueError(f'Stale Skill reference {name}; run scripts/build-creator-docs.py first')
+    if (ROOT / 'dist/index.js').read_bytes() != (ROOT / 'dist/index.mjs').read_bytes():
+        raise ValueError('Build entry files differ; run the complete build first')
+    # Validate all inputs and assemble both archives before creating outputs.
+    packages = dict(zip(names, [archive(DOCS + [
         'extension.json', 'dist/index.js', 'dist/index.mjs', 'dist/deck.js', 'assets/cover.png']),
-    archive(f'random-math-v{VERSION}-docs.zip', DOCS),
-]
-(OUTPUT / 'SHA256SUMS.txt').write_text(''.join(
-    f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in packages
-), encoding='utf-8')
-print(f'Built {len(packages)} archives for v{VERSION}; SHA256SUMS.txt generated.')
+        archive(DOCS)]))
+    sums = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, data in packages.items())
+    output.mkdir(parents=True, exist_ok=True)
+    for name, data in {**packages, 'SHA256SUMS.txt': sums.encode('utf-8')}.items():
+        with (output / name).open('xb') as stream:
+            stream.write(data)
+    print(f'Built {len(packages)} archives for v{VERSION}; SHA256SUMS.txt generated.')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output-dir', type=Path, default=ROOT / 'release',
+                        help='Output directory; existing archive/checksum files are never overwritten')
+    build(parser.parse_args().output_dir)
