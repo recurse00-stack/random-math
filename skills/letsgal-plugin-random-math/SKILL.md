@@ -1,15 +1,15 @@
 ---
 name: letsgal-plugin-random-math
-description: 协助在 LetsGal 使用随机与计算系统，配置范围随机、权重事件、批量输出、不重复抽取池、数学公式和片段完成反馈。适用于 mixing-entropy.random-math 2.2.1 的使用与排错。
+description: 协助在 LetsGal 使用随机与计算系统，配置范围随机、权重事件、批量输出、不重复抽取池、数学公式和片段完成反馈。适用于 mixing-entropy.random-math 2.2.2 的使用与排错。
 metadata:
   plugin_id: mixing-entropy.random-math
-  plugin_version: "2.2.1"
+  plugin_version: "2.2.2"
   documentation_revision: "2026-09-28"
 ---
 
 # 随机与计算系统 · 创作者协助
 
-适用于 `mixing-entropy.random-math` 2.2.1；抽取池与数组运行功能自2.2.0已有，本次不是首次增加这些方法。既可配合 [GitHub 版 `letsgal-authoring` 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases)，由主 Skill 按项目插件版本读取，也可独立安装到 AI 工具的技能目录；独立使用不要求主 Skill。主 Skill 从 GitHub Releases 获取核心包并按包内说明安装，不以工坊安装为前提；随机插件本体不会自动安装主 Skill。
+适用于 `mixing-entropy.random-math` 2.2.2；抽取池与数组运行功能自2.2.0已有，本次不是首次增加这些方法。既可配合 [GitHub 版 `letsgal-authoring` 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases)，由主 Skill 按项目插件版本读取，也可独立安装到 AI 工具的技能目录；独立使用不要求主 Skill。主 Skill 从 GitHub Releases 获取核心包并按包内说明安装，不以工坊安装为前提；随机插件本体不会自动安装主 Skill。
 
 ## 使用前
 
@@ -36,8 +36,4 @@ metadata:
 
 ## 资料与验证
 
-资料依据：[插件源码](https://github.com/recurse00-stack/random-math)、2.2.1 方法定义与随附指南；资料核对日期2026-09-26，发布状态更新于2026-09-28：GitHub 2.2.1 已正式发布；工坊2.2.1已核实上架并开源。本次仅澄清主 Skill 的 GitHub 获取渠道，不代表新增运行或 AI 接入验收。使用前仍须核对目标工程实际启用版本，不能声称工坊2.2.0已包含新候选字段。
-
-首次使用时报告实际读取的资料与适用版本。验证分层和外部工具边界见 references/AI-INTEGRATION.md；文件存在、技能发现、模型读取和目标游戏运行不是同一项验收。
-
-这是使用知识，不授予修改插件源码、升级引擎、发布或删除数据的额外权限。按用户当前请求执行；维护用户原有补充，主Skill升级不应覆盖此目录。
+资料依据：[插件源码](https://github.com/recurse00-stack/random-math)、2.2.2 随附指南及与 2.2.1 相同的方法定义。功能资料沿用 2026-09-26 核对；2026-09-28 修订主 Skill 的 GitHub 获取渠道与插件版本。2.2.2 不代表新增运行或 AI 接入验收，发布／审核状态以实际通道为准。使用前核对目标工程实际启用版本。

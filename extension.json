@@ -4,7 +4,7 @@
   "description": "支持范围与批量随机、权重与固定概率抽取、持久不重复抽取池、数组输出及数学公式计算，配套创作者手册和独立 AI 指南。已知限制：Studio 2.2.0-beta.1 的文字候选鼠标回填疑似受官方 Bug 影响，可暂用 ↑↓＋Enter 或完整手填，等待官方修复。",
   "icon": "assets/cover.png",
   "author": "混合熵",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "entry": "dist/index.js",
   "sdkVersion": ">=1.9.8",
   "dataDependencies": {

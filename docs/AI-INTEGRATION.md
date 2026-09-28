@@ -1,6 +1,6 @@
 # 让 AI 使用随机与计算系统
 
-适用插件：`mixing-entropy.random-math` 2.2.1。验证资料核对日期：2026-09-26；主 Skill 获取渠道说明更新：2026-09-28。
+适用插件：`mixing-entropy.random-math` 2.2.2。验证资料核对日期：2026-09-26；主 Skill 获取渠道说明更新：2026-09-28。
 
 这是 AI 接入说明，与创作者使用手册分开。**安装 LetsGal 插件、规则文件被读取、AI 实际读完指南，是三个不同的步骤。** 插件不能保证所有 AI 自动获得本地文件。
 
@@ -25,7 +25,7 @@
 
 ## 推荐安装位置：配合 GitHub 版主 Skill，或独立安装
 
-本接入包已提供正式插件 Skill：`letsgal-plugin-random-math`，其中 `SKILL.md` 是入口，`references/` 保存详细指南。**安装到哪里，取决于是否已启用支持用户插件目录的 `letsgal-authoring` 主 Skill（本次以 0.1.0-preview.5 完成隔离路由验收）。** 仅看到 `.letsgal-authoring` 目录，不代表主 Skill 已启用。
+本接入包已提供正式插件 Skill：`letsgal-plugin-random-math`，其中 `SKILL.md` 是入口，`references/` 保存详细指南。**安装到哪里，取决于是否已启用支持用户插件目录的 `letsgal-authoring` 主 Skill（历史验收使用 0.1.0-preview.5；2.2.2 未新增模型会话验收）。** 仅看到 `.letsgal-authoring` 目录，不代表主 Skill 已启用。
 
 这里的主 Skill 指 GitHub 上的 **letsgal-authoring**，通过 [letsgal-authoring-kit Releases](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 获取。下载正式发布的核心包 `letsgal-authoring-kit-<版本>.zip`，完整解压后按包内说明安装到所用的外部 AI 工具，再接入本插件的 Skill。主 Skill 通过 GitHub 提供，不以工坊安装为前提；安装随机与计算系统本体也不会同时安装主 Skill。
 
@@ -34,7 +34,7 @@
 已从 GitHub 获取并安装支持用户插件目录的主 Skill，且当前 AI 能实际读取它时，推荐：
 
 ```text
-~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.1/
+~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.2/
 ├── SKILL.md
 └── references/
     ├── AI-GUIDE.md
@@ -42,9 +42,9 @@
 ```
 
 1. 完整解压本包，找到 `Skill/letsgal-plugin-random-math/`。
-2. 将这个文件夹的**内容**复制到上述 `2.2.1/`，不要额外套一层 `letsgal-plugin-random-math`。缺少目录可新建；已有文件先比较和备份，保留用户补充，不整目录覆盖。
+2. 将这个文件夹的**内容**复制到上述 `2.2.2/`，不要额外套一层 `letsgal-plugin-random-math`。缺少目录可新建；已有文件先比较和备份，保留用户补充，不整目录覆盖。
 3. 将包内 `统一管理索引条目.md` 合并到 `~/.letsgal-authoring/plugins/INDEX.md`，保留原有条目。不存在时新建索引。同 ID/版本已有条目时更新该条，不反复追加。
-4. 在当前作品的 `LETSGAL.md` 或既有项目说明中记录“使用 mixing-entropy.random-math 2.2.1”及这份 Skill 的实际入口；已有约定时局部合并。
+4. 在当前作品的 `LETSGAL.md` 或既有项目说明中记录“使用 mixing-entropy.random-math 2.2.2”及这份 Skill 的实际入口；已有约定时局部合并。
 5. 在新会话使用 `letsgal-authoring`，让它按当前作品选择读取这个插件 Skill。该目录由主 Skill 管理读取，**不是所有 AI 工具原生扫描的技能目录**。
 
 这里的 `~` 是实际运行 AI 的用户主目录。Windows 本机可从文件资源管理器地址栏输入 `%USERPROFILE%` 找到用户目录，再进入 `.letsgal-authoring`；远程、WSL、容器和云端要使用对应环境的用户目录。
@@ -140,7 +140,7 @@ DSH 需要当前 profile 已启用文件系统技能提供器及技能工具；�
 - [Cursor 项目规则](https://cursor.com/docs/rules)：项目规则目录与 alwaysApply。
 - [DSH 官方指令加载器说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/context/agent-instructions/README.zh.md)：默认候选、首轮注入、预算和不支持的导入语法。本次同时核对本机安装的 0.1.6-alpha.2 实现。
 
-2.2.1 验证了模板路径、Skill 结构及引用，以及 DSH 0.1.6-alpha.2 官方提供器从用户和项目目录发现并读取正文与参考资料。新增两次 Claude Code 2.1.229 隔离会话实测，使用该客户端已有配置中的 DeepSeek 模型：一次自动调用独立插件 Skill，另一次按明确请求调用 letsgal-authoring 0.1.0-preview.5，再按项目声明读取统一插件区的2.2.1资料。工具记录证实实际读取了入口与完整指南；两次均正确解释片段反馈、建池快照、绑定表范围、输出列、十个方法及remaining读档边界。这里的统一插件区是隔离工程明确指定的位置，未向真实用户目录安装；不据此声称所有主目录布局或所有模型均通过。
+以下为 2.2.1 阶段的历史验证；2.2.2 仅同步文档和 Skill 版本，没有新增模型会话实测。2.2.1 验证了模板路径、Skill 结构及引用，以及 DSH 0.1.6-alpha.2 官方提供器从用户和项目目录发现并读取正文与参考资料。新增两次 Claude Code 2.1.229 隔离会话实测，使用该客户端已有配置中的 DeepSeek 模型：一次自动调用独立插件 Skill，另一次按明确请求调用 letsgal-authoring 0.1.0-preview.5，再按项目声明读取统一插件区的2.2.1资料。工具记录证实实际读取了入口与完整指南；两次均正确解释片段反馈、建池快照、绑定表范围、输出列、十个方法及remaining读档边界。这里的统一插件区是隔离工程明确指定的位置，未向真实用户目录安装；不据此声称所有主目录布局或所有模型均通过。
 
 Claude Code 内使用 DeepSeek 模型不等于 DeepSeek Harness（DSH）客户端验收。DSH隔离模型会话仍缺少可用凭据；Codex新会话发现了Skill摘要，但读取正文的只读命令被执行策略拒绝；Cursor模型会话未实测。测试没有读取、复制凭据或改变用户配置。Skill被发现、模型读到正文、答案正确、目标游戏运行应分别检查；即使本次两种接入成功，也不能保证以后每次都会自动调用。没有接入 LetsGal 内置 AI。
 

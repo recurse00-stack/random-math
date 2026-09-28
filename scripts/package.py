@@ -13,7 +13,7 @@ DOCS = ['skills/letsgal-plugin-random-math/SKILL.md', 'skills/letsgal-plugin-ran
         'docs/USER-GUIDE.md', 'docs/creator-guide.html', 'docs/AI-GUIDE.md', 'docs/ai-guide.html',
         'docs/AI-INTEGRATION.md', 'docs/ai-integration/AGENTS.append.md', 'docs/ai-integration/CLAUDE.append.md', 'docs/ai-integration/random-math.mdc', 'docs/ai-integration/CHAT-START.md',
         'docs/images/variables.png', 'docs/images/new-variable.png',
-        'docs/images/method-picker.png', 'docs/images/candidate-table.png', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md', 'docs/VALIDATION-2.2.1.md']
+        'docs/images/method-picker.png', 'docs/images/candidate-table.png', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md', 'docs/VALIDATION-2.2.1.md', 'docs/VALIDATION-2.2.2.md']
 
 def archive(paths):
     buffer = io.BytesIO()

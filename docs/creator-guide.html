@@ -4,7 +4,7 @@
 aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600px){aside .toc{columns:1}main{padding:24px 16px}h1{font-size:25px}th,td{padding:6px}}
 @media print{aside,dialog,.edition{display:none!important}main{margin:0;padding:0;max-width:none}body{background:white;font-size:10pt}h1{font-size:23pt}h2{font-size:17pt}h3{font-size:13pt}h2,h3{break-after:avoid}tr,img,pre{break-inside:avoid}table{font-size:9pt}img{max-height:145mm;object-fit:contain}a{color:inherit}mark{background:none}}
 .search-actions{display:flex;gap:5px;flex-wrap:wrap}.search-actions button{margin:6px 0;padding:7px 9px}aside button:disabled,aside input:disabled{opacity:.45;cursor:not-allowed}.jump-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:13px}.jump-row input{width:78px;padding:7px}.jump-row button{margin:4px 0}#result{margin:8px 0}mark.current{background:#ffa64b;outline:2px solid #8a4100;outline-offset:2px}dialog#searchDialog{width:1050px;max-height:90vh;padding:22px;color:#243431;background:#fffefb}#searchDialog h2{border:0;padding:0;margin:0;font-size:21px;line-height:1.5}#searchDialog header{display:flex;gap:14px;justify-content:space-between;align-items:start}#searchDialog button{float:none;cursor:pointer;border:1px solid #bccfc5;background:#f3f7f3;color:#174f42;border-radius:5px}#closeResults{flex-shrink:0}#searchDialog .search-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px}#hitList{max-height:60vh;overflow:auto;padding:3px}#hitList .hit-item{display:block;text-align:left;width:100%;margin:0 0 9px;padding:10px 12px;line-height:1.6}#hitList .hit-item span{display:block;font-size:13px;margin-top:5px;overflow-wrap:anywhere}#hitList .hit-item[aria-pressed=true]{background:#dceee2;border:2px solid #176c5b}#previewTitle{font-size:18px;margin:0 0 9px;line-height:1.7}#previewLocation{font-size:13px;color:#64786e}#previewText{padding:16px;background:#f1f5ee;border-left:3px solid #176c5b;overflow-wrap:anywhere;white-space:pre-wrap;max-height:40vh;overflow:auto}#goPreview{padding:10px 15px}#searchDialog .hint{font-size:13px;color:#64786e;margin:8px 0}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #d69b21;outline-offset:2px}@media(max-width:700px){#searchDialog .search-layout{grid-template-columns:1fr;gap:12px}#hitList{max-height:28vh}#previewText{max-height:20vh}dialog#searchDialog{padding:14px;width:96vw}#searchDialog h2{font-size:18px}#searchDialog header button{padding:7px}}@media print{mark.current{outline:none}dialog#searchDialog{display:none!important}}
-</style></head><body><aside><h2>随机与计算系统</h2><p>创作者使用手册<br>插件 2.2.1 · 2026-09-26</p><label for="search">查找正文</label><input id="search" type="search" placeholder="例如：输出列、读档、批量"><div class="search-actions"><button id="find">查找</button><button id="previous">上一处</button><button id="next">下一处</button><button id="openResults">结果与预览</button><button id="print">打印</button></div><div class="jump-row"><label for="hitNumber">跳到第几处</label><input id="hitNumber" type="number" min="1" step="1"><button id="jump">跳转</button></div><div id="result" role="status" aria-live="polite"></div><div class="toc">
+</style></head><body><aside><h2>随机与计算系统</h2><p>创作者使用手册<br>插件 2.2.2 · 2026-09-28</p><label for="search">查找正文</label><input id="search" type="search" placeholder="例如：输出列、读档、批量"><div class="search-actions"><button id="find">查找</button><button id="previous">上一处</button><button id="next">下一处</button><button id="openResults">结果与预览</button><button id="print">打印</button></div><div class="jump-row"><label for="hitNumber">跳到第几处</label><input id="hitNumber" type="number" min="1" step="1"><button id="jump">跳转</button></div><div id="result" role="status" aria-live="polite"></div><div class="toc">
 <ul>
 <li><a href="#1">1. 这个插件能做什么</a><ul>
 <li><a href="#11">1.1 先认清这些词</a></li>
@@ -110,7 +110,7 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 </div>
 </aside><main><div class="edition">创作者教程 · 离线阅读版 · 点击截图可放大</div><h1 id="_1">随机与计算系统 · 创作者使用手册</h1>
 <p><strong>从第一次掷骰，到一整轮不重复事件。</strong></p>
-<p>适用插件：随机与计算系统 2.2.1 · 手册修订：2026-09-28 · 界面参考：LetsGal Studio 2.2.0-beta.1。</p>
+<p>适用插件：随机与计算系统 2.2.2 · 手册修订：2026-09-28 · 界面参考：LetsGal Studio 2.2.0-beta.1。</p>
 <p>这份手册供使用 LetsGal 制作游戏的人阅读。你只需要在编辑器里建立变量、添加方法卡片、填写参数，无须阅读或编译插件源码。先完成第 2、3 章，再按需要查后面的功能。</p>
 <h2 id="1">1. 这个插件能做什么</h2>
 <p>它为剧本提供随机抽取和数学计算：掷骰、概率事件、奖励数值、抽卡、事件轮换和公式计算。<strong>它算出结果，并按你的设置存进变量；接下来显示哪段对白、跳到哪个片段、发什么奖励，由你的剧本安排。</strong></p>
@@ -342,19 +342,20 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 <ol>
 <li>打开你的 LetsGal 项目，在顶部进入 <strong>扩展工坊</strong>，找到“随机与计算系统”，安装或更新。</li>
 <li>打开顶部 <strong>个性化</strong>，在左侧“扩展”区域找到它。如果只在“本机的其它扩展（全局）”中出现，使用对应的“加入并启用”。</li>
-<li>选择插件，在右侧确认版本是 <strong>2.2.1</strong>，“在本项目启用”已打开。</li>
+<li>选择插件，在右侧确认版本是 <strong>2.2.2</strong>，“在本项目启用”已打开。</li>
 <li>返回 <strong>剧本</strong>。安装到电脑不等于已经启用到每个项目。</li>
 </ol>
 <p>已有正式发行文件时，也可以用 <strong>个性化 → 导入扩展 → 复制导入 → 选择.zip</strong> 选择完整插件包。手册包、AI接入包和源码下载不是本体安装包；第一次练习推荐直接从工坊安装。</p>
 <p>若提示“已存在同ID扩展”，先核对已有位置、版本及来源，保留工程和旧存档副本。<strong>不要改插件ID或删除项目内的插件文件来消除提示。</strong> 工坊用户继续更新原条目。</p>
-<p><strong>从本地完整 ZIP 更新 2.2.0 → 2.2.1：</strong> Studio 2.2.0-beta.1 中，当前工程已包含同ID发行物时，直接复制导入可能被拒绝。以下流程已在隔离合成工程实测：</p>
+<p><strong>2.2.2 更新说明：</strong> 本次只修订使用资料和版本号，运行代码、方法参数及存档结构沿用 2.2.1。备份工程后，通过原插件条目更新，并核对本机扩展库和当前工程都已使用 2.2.2；不要改插件 ID。下面保留的是 2.2.1 的历史实测步骤，不代表 2.2.2 已重复完成新装、升级或存读档验收。</p>
+<p><strong>历史实测：从本地完整 ZIP 更新 2.2.0 → 2.2.1：</strong> Studio 2.2.0-beta.1 中，当前工程已包含同ID发行物时，直接复制导入可能被拒绝。以下流程已在隔离合成工程实测：</p>
 <ol>
 <li>保存当前工程，打开一个没有加入本插件的临时空工程。</li>
 <li>在临时工程中选择 <strong>个性化 → 导入扩展 → 复制导入 → 确认并继续 → 选择.zip</strong>，选新版完整插件包。出现“已存在同名扩展”时，核对ID及新版版本，再点 <strong>覆盖扩展</strong>。这一步更新本机扩展库。</li>
 <li>切回原工程，在 <strong>个性化</strong> 选择随机与计算系统。若显示“本机源码不匹配”，核对本机为2.2.1、项目为2.2.0，再点 <strong>改用这份本机源码 → 替换项目发行物</strong>。这里的“本机源码”也可能是 Studio 从完整ZIP导入的副本，不要求你自行编译源码。</li>
 <li>确认右侧项目版本为2.2.1、项目发行物可用且扩展已启用，再运行项目读取旧存档。只更新本机库不等于已更新每个工程。</li>
 </ol>
-<p>本次实测保留了已有卡片参数、变量定义和旧存档：旧版已抽B、余量2，升级读档后继续抽到C、余量1。该结果只覆盖上述本地复制导入路径；工坊在线更新还需在实际发布后确认。若你原来关联了自己修改的源码工程，先备份并核对差异，不要直接照抄覆盖步骤。GitHub及工坊2.2.1均已发布；2026-09-28核实工坊为已上架／开源，安装前仍请核对实际版本。</p>
+<p>上述历史实测保留了已有卡片参数、变量定义和旧存档：旧版已抽B、余量2，升级读档后继续抽到C、余量1。该结果只覆盖上述本地复制导入路径；工坊在线更新还需在实际发布后确认。若你原来关联了自己修改的源码工程，先备份并核对差异，不要直接照抄覆盖步骤。2026-09-28 已核实工坊原 2.2.1 上架并开源；本指南对应 2.2.2，安装前以当前通道实际显示的版本和审核状态为准。</p>
 <h3 id="22">2.2 创建三个基本变量</h3>
 <p><a href="#term-variable">变量</a>是保存结果的有名字的格子。例如数值变量 <code>roll</code> 存骰子点数；文本变量 <code>error</code> 存错误原因；开关变量 <code>ok</code> 表示本次操作成功与否。</p>
 <ol>
@@ -431,7 +432,7 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 <tbody>
 <tr>
 <td>已安装 GitHub 版 LetsGal 创作主 Skill（letsgal-authoring，支持用户插件区的版本）</td>
-<td>默认统一管理：将包内 Skill/letsgal-plugin-random-math/ 的内容放到 <code>~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.1/</code>；按“开始使用.md”补充插件索引，由主 Skill 按作品所用版本读取</td>
+<td>默认统一管理：将包内 Skill/letsgal-plugin-random-math/ 的内容放到 <code>~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.2/</code>；按“开始使用.md”补充插件索引，由主 Skill 按作品所用版本读取</td>
 </tr>
 <tr>
 <td>没有主 Skill，使用 DSH</td>
@@ -458,11 +459,11 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 <p><code>~</code> 表示实际运行 AI 的用户主目录；Windows 本机可在文件资源管理器地址栏输入 <code>%USERPROFILE%</code> 找到它。远程或容器中的 AI 使用那边的目录，不能只放在本机。自定义位置按实际配置选择。</p>
 <p>统一目录里直接放 SKILL.md 和 references，不再多套一层技能名称；独立安装则保留 letsgal-plugin-random-math 文件夹名。已有同名文件先比较与备份，保留原有补充。<strong>有主 Skill 时优先统一管理，没有主 Skill 时才选对应工具目录</strong>，不必同时安装多份。某个目录存在并不证明 AI 已加载它；主 Skill 必须支持并实际读取用户插件资料。</p>
 <p>独立使用本插件的 AI 接入包不要求安装主 Skill，也无需下载随机插件源码；选择主 Skill 统一管理方式时，先从上述 GitHub 地址获取主 Skill。它与“创作者手册包”分开。只想让一个作品使用时，可选该作品内的技能目录，完整位置和步骤见包内“开始使用.md”。旧版“每个项目追加规则”的方式继续可用，已用 Skill 接入时通常不用再重复追加。</p>
-<p>本次已用 Claude Code 分别核对独立插件 Skill 和主 Skill 转读插件资料，两条路径均实际读到了指南。使用 DeepSeek 模型与使用 DSH 客户端是两回事，DSH 的模型会话仍需另行验证。</p>
+<p>2.2.1 阶段曾用 Claude Code 分别核对独立插件 Skill 和主 Skill 转读插件资料，两条路径均实际读到了指南。使用 DeepSeek 模型与使用 DSH 客户端是两回事，DSH 的模型会话仍需另行验证。</p>
 <p>接入后新开会话，使用主 Skill 或独立插件 Skill，让 AI 报告实际读到的文件路径、插件 ID 和适用版本，再解释“执行片段后如何让一个事件不再被抽到；已经建立的抽取池是否跟随权重变化”。结合技能列表和读取记录核对，不能只相信“我已知道”。Skill 被发现不代表模型每次必定调用，也不代表游戏已运行通过。</p>
 <p>主 Skill 更新应保留统一用户区的插件资料；随机数插件升级后，仍需核对并更新相应版本的 Skill。旧项目所需的资料不要直接删掉或改成最新版本。本次提供推荐安装说明和可复制的 Skill 文件，没有替你自动安装。</p>
 <h3 id="26">2.6 检查器里的文字候选下拉</h3>
-<p>2.2.1 为下列文字参数接入原生候选。当前已确认鼠标点击候选不能回填；可用方向键选择后按 Enter，或完整手填。该问题疑似属于 Studio 官方 Bug，等待官方修复。此文档对应2.2.1，GitHub及工坊均已发布；旧版不包含本版全部更新。</p>
+<p>2.2.1 为下列文字参数接入原生候选。当前已确认鼠标点击候选不能回填；可用方向键选择后按 Enter，或完整手填。该问题疑似属于 Studio 官方 Bug，等待官方修复。此文档对应 2.2.2，候选行为沿用 2.2.1；鼠标回填问题没有在本次修复。</p>
 <table>
 <thead>
 <tr>
@@ -1559,7 +1560,7 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 <tbody>
 <tr>
 <td>工坊安装了，方法列表找不到</td>
-<td>个性化中是否加入并启用到本项目；版本是否2.2.1</td>
+<td>个性化中是否加入并启用到本项目；版本是否2.2.2</td>
 </tr>
 <tr>
 <td>看得到插件，但只有语法速查，没有抽取按钮</td>
@@ -1637,7 +1638,7 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 </table>
 <h3 id="_3">表格接口兼容性</h3>
 <p>此前在 Studio 2.0.0 的预览和 Windows 导出播放器中，表格功能出现过：<strong>“当前宿主没有为数据依赖提供项目数据库能力”</strong>。这种情况影响候选表、表来源抽取池和自定义函数表；范围随机、JSON数组抽取池和基础计算不依赖该接口。</p>
-<p>在 Studio 2.2.0-beta.1 的合成工程实时预览与本次新导出的 Windows 独立播放器中，文字／数值列表、公式批量和函数表求和8.5均通过了实际变量条件检查。Windows播放器另完成抽取池保存、读取、继续抽取与抽空检查；这不代表所有宿主版本或其他平台均已通过。遇到此报错，保留完整错误信息和 Studio 版本；需要立即试用不重复功能时，先使用第4章的JSON数组方案。</p>
+<p>在 Studio 2.2.0-beta.1 的合成工程实时预览与此前验收导出的 Windows 独立播放器中，文字／数值列表、公式批量和函数表求和8.5均通过了实际变量条件检查。Windows播放器另完成抽取池保存、读取、继续抽取与抽空检查；这不代表所有宿主版本或其他平台均已通过。遇到此报错，保留完整错误信息和 Studio 版本；需要立即试用不重复功能时，先使用第4章的JSON数组方案。</p>
 <h3 id="_4">使用规模与限制</h3>
 <p>一次最多抽100项；单个候选表／抽取池最多10000项；同一存档最多100个抽取池，所有池剩余项合计最多20000。用完的空池仍占名称和池数量，可显式重置删除。</p>
 <p>单次数组输入文本最多1000000字符；抽取池存档记录合计最多4000000字符。函数表最多1000行，单条表达式最多4096字符，解析深度与函数调用深度最多32，每次表达式求值最多4096次函数调用。固定随机记录最多10000条。接近上限时按游戏阶段清理不用的记录，不要一次承载整部作品所有历史事件。</p>
@@ -1689,7 +1690,7 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 </tr>
 </tbody>
 </table>
-<p>这张表供你检查自己的剧本。参数和示例已按2.2.1实现核对；文档中的流程示意和预期结果不等于你当前项目已经运行通过。</p>
+<p>这张表供你检查自己的剧本。参数和示例沿用与 2.2.1 相同的 2.2.2 实现；文档中的流程示意和预期结果不等于你当前项目已经运行通过。</p>
 <h3 id="133">13.3 这份手册如何阅读和更新</h3>
 <p>这是独立的创作者资料，包含上手教程和全部功能参考。HTML版可离线打开、按目录跳转、搜索结果编号直达、查看上下文预览并打印；Markdown版便于逐段修订。更新时以同一份正文为准，截图标注对应界面版本。</p>
 <p>本版补充：扩展设置中的手册位置指引、插件Skill推荐安装位置与接入边界、文字候选声明及检索限制、术语对照与跳转、搜索结果列表和上下文预览、片段完成后的变量反馈；保留变量创建入口、两个完整入门流程、输出列解释、批量数组、存读档、公式与排障。截图来自 Studio 2.2.0-beta.1 的实际界面；不同布局可能改变面板停靠位置。</p></main><dialog id="zoom"><button id="closeZoom">关闭</button><img alt="放大的手册截图"></dialog><dialog id="searchDialog" aria-labelledby="resultsTitle"><header><h2 id="resultsTitle">搜索结果</h2><button id="closeResults">关闭预览</button></header><p class="hint">选择编号先看上下文，点“跳转到正文”再前往。位置百分比表示文中位置。</p><div class="search-layout"><div id="hitList" aria-label="搜索命中列表"></div><section aria-label="命中预览"><h3 id="previewTitle">选择一处查看预览</h3><div id="previewLocation"></div><p id="previewText"></p><button id="goPreview">跳转到正文</button></section></div></dialog><script>/* Embedded by build-creator-docs.py; no network or storage access. */
