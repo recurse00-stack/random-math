@@ -1,8 +1,43 @@
+# 随机与计算系统 2.2.1
+
+为 LetsGal 剧本提供随机数、批量数组、文字和数值候选抽取、权重与固定概率、跨调用不重复抽取池，以及数学公式计算。适合掷骰、概率事件、抽卡、奖励和事件轮换。结果写入你创建的变量，剧情分支和奖励由你的剧本接续。
+
+## 详细指导在哪里？不需要下载源码
+
+**第一次使用：直接往下看。本页后半部分就是完整的创作者手册，包含术语、安装与变量、第一次掷骰、三个事件各抽一次、表格绑定、输出列、动态反馈、存读档和排障。无需跳转，也不需要下载源码或 AI 接入包。**
+
+- **在线阅读人类教程：** [打开创作者使用手册](https://github.com/recurse00-stack/random-math/blob/main/docs/USER-GUIDE.md)。浏览器直接阅读，无需登录 GitHub、下载仓库或编译。
+- **单独保存离线手册：** [下载创作者手册 HTML](https://raw.githubusercontent.com/recurse00-stack/random-math/main/docs/creator-guide.html)。保存后用浏览器打开，目录、搜索、跳到第几处、结果预览和图片都可离线使用；只下载这一个文件即可。
+- **让外部 AI 协助：** [在线阅读独立 AI 使用指南](https://github.com/recurse00-stack/random-math/blob/main/docs/AI-GUIDE.md)；也可[单独下载 AI 指南 HTML](https://raw.githubusercontent.com/recurse00-stack/random-math/main/docs/ai-guide.html)。人类教程与 AI 规则分开，安装插件不代表 AI 已自动接入；本版未接入 LetsGal 内置 AI，其他工具的实际验证范围见指南。
+
+如果当前 Studio 的详情预览不能打开链接，直接阅读下方完整教程。需要独立版本时，把下面地址复制到系统浏览器（不要下载页面里的 Source code）：
+
+创作者手册在线阅读：
+https://github.com/recurse00-stack/random-math/blob/main/docs/USER-GUIDE.md
+
+创作者手册单文件下载：
+https://raw.githubusercontent.com/recurse00-stack/random-math/main/docs/creator-guide.html
+
+独立 AI 指南在线阅读：
+https://github.com/recurse00-stack/random-math/blob/main/docs/AI-GUIDE.md
+
+安装插件请使用工坊的“安装／更新”入口；手册和 AI 接入包不是插件本体。
+
+**AI Skill 配合说明：** 统一管理方式配合 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 使用。请从该页面下载核心包并按包内说明安装；主 Skill 通过 GitHub 提供，不以工坊安装为前提。没有主 Skill 时，也可独立安装本插件 Skill。
+
+## 2.2.1 更新与已知限制
+
+本次更新原插件 mixing-entropy.random-math，保留方法和存档结构。重点补全创作者手册、术语解释、搜索结果编号跳转与上下文预览、独立 AI 指南／Skill，以及文本候选填写提示。
+
+**疑似官方 Bug：** 在 Studio 2.2.0-beta.1 中，文本候选下拉可能出现“能看到候选，但鼠标点击不回填”。等待官方修复；展开候选后可暂用 ↑↓＋Enter，或完整手填。中文按输入文字过滤，本版不承诺拼音检索。该限制不应写成已修复。
+
+---
+
 # 随机与计算系统 · 创作者使用手册
 
 **从第一次掷骰，到一整轮不重复事件。**
 
-适用插件：随机与计算系统 2.2.1 · 手册修订：2026-09-26 · 界面参考：LetsGal Studio 2.2.0-beta.1。
+适用插件：随机与计算系统 2.2.1 · 手册修订：2026-09-28 · 界面参考：LetsGal Studio 2.2.0-beta.1。
 
 这份手册供使用 LetsGal 制作游戏的人阅读。你只需要在编辑器里建立变量、添加方法卡片、填写参数，无须阅读或编译插件源码。先完成第 2、3 章，再按需要查后面的功能。
 
@@ -96,7 +131,7 @@ HTML版输入关键词后点“查找”或按回车，会显示命中总数。�
 3. 切回原工程，在 **个性化** 选择随机与计算系统。若显示“本机源码不匹配”，核对本机为2.2.1、项目为2.2.0，再点 **改用这份本机源码 → 替换项目发行物**。这里的“本机源码”也可能是 Studio 从完整ZIP导入的副本，不要求你自行编译源码。
 4. 确认右侧项目版本为2.2.1、项目发行物可用且扩展已启用，再运行项目读取旧存档。只更新本机库不等于已更新每个工程。
 
-本次实测保留了已有卡片参数、变量定义和旧存档：旧版已抽B、余量2，升级读档后继续抽到C、余量1。该结果只覆盖上述本地复制导入路径；工坊在线更新还需在实际发布后确认。若你原来关联了自己修改的源码工程，先备份并核对差异，不要直接照抄覆盖步骤。本版随 GitHub 2.2.1 发行；工坊更新另行提交，安装前请核对实际版本。
+本次实测保留了已有卡片参数、变量定义和旧存档：旧版已抽B、余量2，升级读档后继续抽到C、余量1。该结果只覆盖上述本地复制导入路径；工坊在线更新还需在实际发布后确认。若你原来关联了自己修改的源码工程，先备份并核对差异，不要直接照抄覆盖步骤。GitHub及工坊2.2.1均已发布；2026-09-28核实工坊为已上架／开源，安装前仍请核对实际版本。
 
 ### 2.2 创建三个基本变量
 
@@ -153,11 +188,17 @@ AI 工具的支持程度不同：Claude Code 已有实测；DSH、Codex 的完�
 
 **第一次仍需接入资料；现在优先使用正式的插件 Skill。** Skill 是 AI 可以按任务读取的使用说明入口，附带详细参考资料，不是游戏里的插件程序。
 
-下载并完整解压“AI接入包”，按下面顺序选一种方式：
+**配合主 Skill 使用时，本文指的是 GitHub 版 letsgal-authoring。** 主 Skill 下载地址：
+
+`https://github.com/recurse00-stack/letsgal-authoring-kit/releases`
+
+复制上面地址到浏览器，下载正式发布的核心包 `letsgal-authoring-kit-<版本>.zip`，完整解压后按包内说明安装到所用的外部 AI 工具。主 Skill 通过 GitHub 提供，不以工坊安装为前提；随机与计算系统的工坊安装不会同时安装主 Skill。只想使用本插件的 AI 指南，也可以按下面的独立安装方式接入。
+
+下载并完整解压本插件的“AI接入包”，按下面顺序选一种方式：
 
 | 你的情况 | 推荐位置与做法 |
 |---|---|
-| 已安装 LetsGal 创作主 Skill（letsgal-authoring，支持用户插件区的版本） | 默认统一管理：将包内 Skill/letsgal-plugin-random-math/ 的内容放到 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.1/`；按“开始使用.md”补充插件索引，由主 Skill 按作品所用版本读取 |
+| 已安装 GitHub 版 LetsGal 创作主 Skill（letsgal-authoring，支持用户插件区的版本） | 默认统一管理：将包内 Skill/letsgal-plugin-random-math/ 的内容放到 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.1/`；按“开始使用.md”补充插件索引，由主 Skill 按作品所用版本读取 |
 | 没有主 Skill，使用 DSH | 将完整 letsgal-plugin-random-math 文件夹放到实际 DSH 数据目录的 skills 下；未自定义时为 `~/.dsh/skills/letsgal-plugin-random-math/` |
 | 没有主 Skill，使用 Codex 或 Cursor | 将完整文件夹放到 `~/.agents/skills/letsgal-plugin-random-math/` |
 | 没有主 Skill，使用 Claude Code | 将完整文件夹放到 `~/.claude/skills/letsgal-plugin-random-math/` |
@@ -168,7 +209,7 @@ AI 工具的支持程度不同：Claude Code 已有实测；DSH、Codex 的完�
 
 统一目录里直接放 SKILL.md 和 references，不再多套一层技能名称；独立安装则保留 letsgal-plugin-random-math 文件夹名。已有同名文件先比较与备份，保留原有补充。**有主 Skill 时优先统一管理，没有主 Skill 时才选对应工具目录**，不必同时安装多份。某个目录存在并不证明 AI 已加载它；主 Skill 必须支持并实际读取用户插件资料。
 
-接入包不需要 GitHub 或插件源码，也不强制安装主 Skill。它与“创作者手册包”分开。只想让一个作品使用时，可选该作品内的技能目录，完整位置和步骤见包内“开始使用.md”。旧版“每个项目追加规则”的方式继续可用，已用 Skill 接入时通常不用再重复追加。
+独立使用本插件的 AI 接入包不要求安装主 Skill，也无需下载随机插件源码；选择主 Skill 统一管理方式时，先从上述 GitHub 地址获取主 Skill。它与“创作者手册包”分开。只想让一个作品使用时，可选该作品内的技能目录，完整位置和步骤见包内“开始使用.md”。旧版“每个项目追加规则”的方式继续可用，已用 Skill 接入时通常不用再重复追加。
 
 本次已用 Claude Code 分别核对独立插件 Skill 和主 Skill 转读插件资料，两条路径均实际读到了指南。使用 DeepSeek 模型与使用 DSH 客户端是两回事，DSH 的模型会话仍需另行验证。
 
@@ -178,7 +219,7 @@ AI 工具的支持程度不同：Claude Code 已有实测；DSH、Codex 的完�
 
 ### 2.6 检查器里的文字候选下拉
 
-2.2.1 为下列文字参数接入原生候选。当前已确认鼠标点击候选不能回填；可用方向键选择后按 Enter，或完整手填。该问题疑似属于 Studio 官方 Bug，等待官方修复。此文档对应 GitHub 2.2.1；工坊更新另行提交，旧版不包含本版全部更新。
+2.2.1 为下列文字参数接入原生候选。当前已确认鼠标点击候选不能回填；可用方向键选择后按 Enter，或完整手填。该问题疑似属于 Studio 官方 Bug，等待官方修复。此文档对应2.2.1，GitHub及工坊均已发布；旧版不包含本版全部更新。
 
 | 手填项 | 候选复用范围 |
 |---|---|

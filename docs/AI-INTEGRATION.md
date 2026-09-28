@@ -1,6 +1,6 @@
 # 让 AI 使用随机与计算系统
 
-适用插件：`mixing-entropy.random-math` 2.2.1。核对日期：2026-09-26。
+适用插件：`mixing-entropy.random-math` 2.2.1。验证资料核对日期：2026-09-26；主 Skill 获取渠道说明更新：2026-09-28。
 
 这是 AI 接入说明，与创作者使用手册分开。**安装 LetsGal 插件、规则文件被读取、AI 实际读完指南，是三个不同的步骤。** 插件不能保证所有 AI 自动获得本地文件。
 
@@ -23,13 +23,15 @@
 
 若已把 Skill 装好，正在其 `references/AI-INTEGRATION.md` 中阅读本文，回上一级即可找到 `SKILL.md`；安装包里的规则模板与索引片段没有复制进该技能目录。需要这些备用文件时使用原接入包。索引片段中的相对链接以目标 `plugins/INDEX.md` 为基准，合并且复制 Skill 后才可跳转，不能在未安装的模板位置直接测试它。
 
-## 推荐安装位置：先统一管理，没有主 Skill 再独立安装
+## 推荐安装位置：配合 GitHub 版主 Skill，或独立安装
 
 本接入包已提供正式插件 Skill：`letsgal-plugin-random-math`，其中 `SKILL.md` 是入口，`references/` 保存详细指南。**安装到哪里，取决于是否已启用支持用户插件目录的 `letsgal-authoring` 主 Skill（本次以 0.1.0-preview.5 完成隔离路由验收）。** 仅看到 `.letsgal-authoring` 目录，不代表主 Skill 已启用。
 
-### 首选：LetsGal 主 Skill 的统一插件区
+这里的主 Skill 指 GitHub 上的 **letsgal-authoring**，通过 [letsgal-authoring-kit Releases](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 获取。下载正式发布的核心包 `letsgal-authoring-kit-<版本>.zip`，完整解压后按包内说明安装到所用的外部 AI 工具，再接入本插件的 Skill。主 Skill 通过 GitHub 提供，不以工坊安装为前提；安装随机与计算系统本体也不会同时安装主 Skill。
 
-已安装并能使用主 Skill 时，推荐：
+### 首选：配合 GitHub 版 LetsGal 主 Skill 的统一插件区
+
+已从 GitHub 获取并安装支持用户插件目录的主 Skill，且当前 AI 能实际读取它时，推荐：
 
 ```text
 ~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.1/

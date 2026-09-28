@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>随机与计算系统 · AI 使用指南</title><style>body{max-width:1100px;margin:auto;padding:32px 20px;font:16px/1.8 system-ui,"Microsoft YaHei",sans-serif;color:#243431;background:#fffefb}h2{margin-top:40px;color:#145c4d}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ccd8cf;padding:9px;text-align:left;overflow-wrap:anywhere}th,pre{background:#edf3ef}pre{padding:18px;white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}a{color:#176c5b}</style><h1 id="221-ai">随机与计算系统 2.2.1 · AI 使用指南</h1>
-<p>适用扩展：<code>mixing-entropy.random-math</code>，插件版本2.2.1。文档修订：2026-09-26。</p>
+<p>适用扩展：<code>mixing-entropy.random-math</code>，插件版本2.2.1。文档修订：2026-09-28；既有功能验证范围不变。</p>
 <p>本文件供协助创作者编排 LetsGal 剧本的 AI 阅读，不是插件源码维护记录。人类教程另见 <code>USER-GUIDE.md</code> 或离线 <code>creator-guide.html</code>。将本文件提供给 AI，或由有文件访问能力的工具读取；文件随包提供不代表 Studio 的 AI 助手必然会自动加载它。</p>
-<p>推荐安装步骤见 <a href="AI-INTEGRATION.md">AI 接入说明</a>：有 letsgal-authoring 主 Skill 时，优先放入其按插件 ID/版本分开的统一用户区；没有时，独立安装 letsgal-plugin-random-math 到所用 AI 的技能目录。项目规则和上传指南保留为备用。安装 LetsGal 插件本体不等于安装或加载了这份 Skill；本版不接入 LetsGal 内置文档助手。</p>
+<p>推荐安装步骤见 <a href="AI-INTEGRATION.md">AI 接入说明</a>：已安装 <a href="https://github.com/recurse00-stack/letsgal-authoring-kit/releases">GitHub 版 letsgal-authoring 主 Skill</a> 时，优先放入其按插件 ID/版本分开的统一用户区；没有时，独立安装 letsgal-plugin-random-math 到所用 AI 的技能目录。项目规则和上传指南保留为备用。主 Skill 从 GitHub 核心包按随附说明安装，不以工坊安装为前提。安装 LetsGal 插件本体不等于安装主 Skill，也不等于安装或加载了这份插件 Skill；本版不接入 LetsGal 内置文档助手。</p>
 <h2 id="1">1. 使用前核对</h2>
 <ol>
 <li>核对项目实际启用的扩展 ID 与版本，再读取当前宿主提供的方法及参数。本文以2.2.1参数为准。抽取池和数组功能在2.2.0已经提供；2.2.1主要补充候选提示、手册与AI资料，不要把这些运行功能误写成2.2.1首次新增。其他旧版本仍须核对其实际方法。</li>

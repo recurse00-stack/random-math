@@ -1,10 +1,10 @@
 # 随机与计算系统 2.2.1 · AI 使用指南
 
-适用扩展：`mixing-entropy.random-math`，插件版本2.2.1。文档修订：2026-09-26。
+适用扩展：`mixing-entropy.random-math`，插件版本2.2.1。文档修订：2026-09-28；既有功能验证范围不变。
 
 本文件供协助创作者编排 LetsGal 剧本的 AI 阅读，不是插件源码维护记录。人类教程另见 `USER-GUIDE.md` 或离线 `creator-guide.html`。将本文件提供给 AI，或由有文件访问能力的工具读取；文件随包提供不代表 Studio 的 AI 助手必然会自动加载它。
 
-推荐安装步骤见 [AI 接入说明](AI-INTEGRATION.md)：有 letsgal-authoring 主 Skill 时，优先放入其按插件 ID/版本分开的统一用户区；没有时，独立安装 letsgal-plugin-random-math 到所用 AI 的技能目录。项目规则和上传指南保留为备用。安装 LetsGal 插件本体不等于安装或加载了这份 Skill；本版不接入 LetsGal 内置文档助手。
+推荐安装步骤见 [AI 接入说明](AI-INTEGRATION.md)：已安装 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时，优先放入其按插件 ID/版本分开的统一用户区；没有时，独立安装 letsgal-plugin-random-math 到所用 AI 的技能目录。项目规则和上传指南保留为备用。主 Skill 从 GitHub 核心包按随附说明安装，不以工坊安装为前提。安装 LetsGal 插件本体不等于安装主 Skill，也不等于安装或加载了这份插件 Skill；本版不接入 LetsGal 内置文档助手。
 
 ## 1. 使用前核对
 

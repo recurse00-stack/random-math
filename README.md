@@ -37,6 +37,6 @@
 
 需要 AI 协助编排剧本时，将 [AI 使用指南](docs/AI-GUIDE.md) 提供给它；[离线阅读版](docs/ai-guide.html) 单独提供。包含十个方法的全部参数、绑定与变量约定、片段反馈范例及功能边界。该文件与人类教程分开，安装插件不代表宿主 AI 会自动读取它。
 
-推荐安装方法见 [AI 接入说明](docs/AI-INTEGRATION.md)。正式插件 Skill 为 [letsgal-plugin-random-math](skills/letsgal-plugin-random-math/SKILL.md)：已安装 letsgal-authoring 主 Skill 时优先放入 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.1/` 统一管理；没有主 Skill 时再安装到 DSH、Codex、Claude Code、Cursor 的技能目录。项目规则和上传指南作为备用；本版不接入 LetsGal 内置助手。
+推荐安装方法见 [AI 接入说明](docs/AI-INTEGRATION.md)。正式插件 Skill 为 [letsgal-plugin-random-math](skills/letsgal-plugin-random-math/SKILL.md)：已安装 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时优先放入 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.1/` 统一管理；没有主 Skill 时再安装到 DSH、Codex、Claude Code、Cursor 的技能目录。主 Skill 通过上述 GitHub Releases 的核心包获取，按包内说明安装，不以工坊安装为前提，也不会随随机插件本体自动安装。项目规则和上传指南作为备用；本版不接入 LetsGal 内置助手。
 
 本版补充术语和手册搜索预览、片段反馈示例及独立 AI Skill。文字候选已接入并可按中文文字过滤，但 Studio 2.2.0-beta.1 的鼠标选择回填经人工确认失败，已验证方向键＋Enter或完整手填可用；疑似 Studio 官方 Bug，等待官方修复。扩展设置“创作者手册与 AI 指南”提供阅读位置；本版不包含拼音检索。
