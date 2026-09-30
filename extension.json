@@ -1,10 +1,10 @@
 {
   "id": "mixing-entropy.random-math",
   "name": "随机与计算系统",
-  "description": "支持范围与批量随机、权重与固定概率抽取、持久不重复抽取池、数组输出及数学公式计算，配套创作者手册和独立 AI 指南。已知限制：Studio 2.2.0-beta.1 的文字候选鼠标回填疑似受官方 Bug 影响，可暂用 ↑↓＋Enter 或完整手填，等待官方修复。",
+  "description": "支持范围与批量随机、权重与固定概率抽取、持久不重复抽取池、数组输出及数学公式计算，配套创作者手册、AI Skill与预览式安装助手。2.2.3更新Stable/Beta资料路由与2.3.0-beta.1静态兼容说明；运行代码沿用2.2.1，新Beta实机兼容尚待验证。历史文字候选鼠标回填疑似宿主问题，暂用方向键＋Enter或完整手填。",
   "icon": "assets/cover.png",
   "author": "混合熵",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "entry": "dist/index.js",
   "sdkVersion": ">=1.9.8",
   "dataDependencies": {

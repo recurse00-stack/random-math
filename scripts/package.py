@@ -5,17 +5,30 @@ import json
 import zipfile
 import argparse
 import io
+import runpy
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = json.loads((ROOT / 'extension.json').read_text(encoding='utf-8'))['version']
-DOCS = ['skills/letsgal-plugin-random-math/SKILL.md', 'skills/letsgal-plugin-random-math/references/AI-GUIDE.md', 'skills/letsgal-plugin-random-math/references/AI-INTEGRATION.md', 'docs/ai-integration/PLUGIN-INDEX.entry.md',
+SKILL_FILES = [
+    'skills/letsgal-plugin-random-math/SKILL.md',
+    'skills/letsgal-plugin-random-math/references/AI-GUIDE.md',
+    'skills/letsgal-plugin-random-math/references/AI-INTEGRATION.md',
+    'skills/letsgal-plugin-random-math/references/compatibility/stable.md',
+    'skills/letsgal-plugin-random-math/references/compatibility/beta.md',
+    'skills/letsgal-plugin-random-math/scripts/select-host-guidance.py',
+]
+AI_TOOLS = ['scripts/install-skill.py', 'scripts/select-host-guidance.py']
+DOCS = SKILL_FILES + AI_TOOLS + ['docs/ai-integration/PLUGIN-INDEX.entry.md',
         'README.md', 'CHANGELOG.md', 'RELEASE-NOTES.md', 'LICENSE',
         'docs/USER-GUIDE.md', 'docs/creator-guide.html', 'docs/AI-GUIDE.md', 'docs/ai-guide.html',
         'docs/AI-INTEGRATION.md', 'docs/ai-integration/AGENTS.append.md', 'docs/ai-integration/CLAUDE.append.md', 'docs/ai-integration/random-math.mdc', 'docs/ai-integration/CHAT-START.md',
         'docs/images/variables.png', 'docs/images/new-variable.png',
-        'docs/images/method-picker.png', 'docs/images/candidate-table.png', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md', 'docs/VALIDATION-2.2.1.md', 'docs/VALIDATION-2.2.2.md']
+        'docs/images/method-picker.png', 'docs/images/candidate-table.png', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md', 'docs/VALIDATION-2.2.1.md', 'docs/VALIDATION-2.2.2.md', 'docs/VALIDATION-2.2.3.md']
 
-def archive(paths):
+def archive(paths, generated=None):
+    generated = {} if generated is None else generated
+    if set(paths) & set(generated):
+        raise ValueError('Generated release file conflicts with the allowlist')
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as bundle:
         for relative in sorted(paths):
@@ -23,8 +36,15 @@ def archive(paths):
             if source.is_symlink() or not source.is_file():
                 raise ValueError(f'Expected regular release file: {relative}')
             data = source.read_bytes()
-            if source.suffix in {'.json', '.js', '.mjs', '.md'} or relative == 'LICENSE':
+            # Skill checksums describe exact source bytes; never normalize these files.
+            if not relative.startswith('skills/') and (source.suffix in {'.json', '.js', '.mjs', '.md'} or relative == 'LICENSE'):
                 data = data.replace(b'\r\n', b'\n')
+            info = zipfile.ZipInfo(relative, date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.create_system = 3
+            info.external_attr = 0o100644 << 16
+            bundle.writestr(info, data)
+        for relative, data in sorted(generated.items()):
             info = zipfile.ZipInfo(relative, date_time=(2026, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.create_system = 3
@@ -33,7 +53,7 @@ def archive(paths):
     buffer.seek(0)
     with zipfile.ZipFile(buffer) as bundle:
         assert bundle.testzip() is None
-        assert sorted(bundle.namelist()) == sorted(paths)
+        assert sorted(bundle.namelist()) == sorted([*paths, *generated])
     return buffer.getvalue()
 
 def build(output):
@@ -50,10 +70,16 @@ def build(output):
             raise ValueError(f'Stale Skill reference {name}; run scripts/build-creator-docs.py first')
     if (ROOT / 'dist/index.js').read_bytes() != (ROOT / 'dist/index.mjs').read_bytes():
         raise ValueError('Build entry files differ; run the complete build first')
+    installer = runpy.run_path(str(ROOT / 'scripts/install-skill.py'))
+    skill_manifest = installer['manifest_bytes'](ROOT / 'skills/letsgal-plugin-random-math', ROOT)
+    expected = {path.removeprefix('skills/letsgal-plugin-random-math/') for path in SKILL_FILES}
+    if set(json.loads(skill_manifest)['files']) != expected:
+        raise ValueError('Skill tree differs from the public allowlist; review new/missing files before packaging')
+    manifest = {'plugin-skill-manifest.json': skill_manifest}
     # Validate all inputs and assemble both archives before creating outputs.
     packages = dict(zip(names, [archive(DOCS + [
-        'extension.json', 'dist/index.js', 'dist/index.mjs', 'dist/deck.js', 'assets/cover.png']),
-        archive(DOCS)]))
+        'extension.json', 'dist/index.js', 'dist/index.mjs', 'dist/deck.js', 'assets/cover.png'], manifest),
+        archive(DOCS + ['extension.json'], manifest)]))
     sums = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, data in packages.items())
     output.mkdir(parents=True, exist_ok=True)
     for name, data in {**packages, 'SHA256SUMS.txt': sums.encode('utf-8')}.items():

@@ -1,6 +1,6 @@
-# 随机与计算系统 2.2.2
+# 随机与计算系统 2.2.3
 
-2.2.2 修订主 Skill 的 GitHub 获取渠道、人工手册和 AI 资料，运行代码与 2.2.1 完全相同。此次检查及历史证据边界见 [2.2.2 验证范围](docs/VALIDATION-2.2.2.md)。此前 2.2.0→2.2.1 本地升级和旧存档续抽结果保留为历史证据，不能当成 2.2.2 新实测；升级说明见手册第2.1节。
+2.2.3 根据 LetsGal Studio 2.3.0-beta.1 的 SDK 静态比较更新使用资料，增加插件 Skill 辅助安装与 Stable／Beta 资料选择。运行代码仍沿用 2.2.1；十个方法、参数、存档结构和原 SDK／依赖不变。新 Beta 的 SDK 保留本插件所用接口，目前没有需要改写运行代码的证据；这不等于新 Beta 实机兼容已通过。此次检查及历史证据边界见 [2.2.3 验证范围](docs/VALIDATION-2.2.3.md)。升级说明见手册第2.1节。
 
 为 LetsGal 剧本提供整数与小数随机、权重事件、文字和数值批量抽取、跨调用不重复抽取池，以及数学计算和自定义函数。
 
@@ -37,6 +37,8 @@
 
 需要 AI 协助编排剧本时，将 [AI 使用指南](docs/AI-GUIDE.md) 提供给它；[离线阅读版](docs/ai-guide.html) 单独提供。包含十个方法的全部参数、绑定与变量约定、片段反馈范例及功能边界。该文件与人类教程分开，安装插件不代表宿主 AI 会自动读取它。
 
-推荐安装方法见 [AI 接入说明](docs/AI-INTEGRATION.md)。正式插件 Skill 为 [letsgal-plugin-random-math](skills/letsgal-plugin-random-math/SKILL.md)：已安装 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时优先放入 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.2/` 统一管理；没有主 Skill 时再安装到 DSH、Codex、Claude Code、Cursor 的技能目录。主 Skill 通过上述 GitHub Releases 的核心包获取，按包内说明安装，不以工坊安装为前提，也不会随随机插件本体自动安装。项目规则和上传指南作为备用；本版不接入 LetsGal 内置助手。
+推荐安装方法见 [AI 接入说明](docs/AI-INTEGRATION.md)。正式插件 Skill 为 [letsgal-plugin-random-math](skills/letsgal-plugin-random-math/SKILL.md)：当前 Agent 已安装 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时，安装到实际用户区 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.3/` 并补充索引；主 Skill 不存在时才独立安装。从本插件 GitHub Release 下载完整插件 ZIP 或独立 AI 接入包，完整解压后在包根运行 `scripts/install-skill.py`：默认只预览，确认路径和差异后用 `--apply` 安装。包根必须保留 `extension.json`、`plugin-skill-manifest.json`、`skills/` 和 `scripts/`；公开源码根不是简易安装入口，不需要普通用户手工生成清单。助手不会将插件知识写进公共主 Skill 包。主 Skill 通过上述 GitHub Releases 的核心包获取，不以工坊安装为前提，也不会随随机插件本体自动安装。项目规则和上传指南作为备用；本版不接入 LetsGal 内置助手。
 
-本版补充术语和手册搜索预览、片段反馈示例及独立 AI Skill。文字候选已接入并可按中文文字过滤，但 Studio 2.2.0-beta.1 的鼠标选择回填经人工确认失败，已验证方向键＋Enter或完整手填可用；疑似 Studio 官方 Bug，等待官方修复。扩展设置“创作者手册与 AI 指南”提供阅读位置；本版不包含拼音检索。
+AI 使用前按目标工程、实际 Studio 完整版本／通道、相关 SDK 与有效样本选择一套资料；`scripts/select-host-guidance.py` 只读生成选择结果，缺项或冲突标为 `UNKNOWN`，不升级宿主。资料选择检查和两个宿主的实际运行分别验收。
+
+文字候选的旧证据来自 Studio 2.2.0-beta.1：中文过滤可用，鼠标选择回填经人工确认失败，方向键＋Enter或完整手填可用。该问题仍按疑似官方 Bug 披露；2.3.0-beta.1 尚未完成本插件 GUI 复测，不能宣称已经修复。扩展设置“创作者手册与 AI 指南”提供阅读位置；本版不包含拼音检索。手册四张截图继续标注真实来源 Studio 2.2.0-beta.1。

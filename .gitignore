@@ -1,17 +1,24 @@
 node_modules/
-dist/
 .npm-cache/
-.ai-work/
-.backup/
-.backup-policy.json
-AGENTS.md
-Archive.ps1
-Backup.ps1
+dist/
+_*.mjs
+
+# Independent project backup and safe source tracking
+node_modules/
+__pycache__/
+*.pyc
+.backup/*.log
 .env
 .env.*
 !.env.example
-*.key
 *.pem
-*.log
-__pycache__/
-release/
+*.key
+id_ed25519
+id_rsa
+/dist/
+!/_postbuild.mjs
+!/_test/
+!/_test/**
+
+# Task logs/fixtures belong to complete backups, not Git
+.ai-work/tasks/

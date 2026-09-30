@@ -37,7 +37,11 @@ assert len(re.findall(r'^## ',text,re.M))==13
 assert all(x in text for x in ['rand-pick-number','deck-create','deck-draw','deck-peek','deck-reset','preview-pool','reset-fixed','calc'])
 assert not any(x in text for x in ['.ai-work','npm run','SDK','AGENTS.md','源码关联流程'])
 print('Built standalone HTML; 13 chapters; anchors and audience boundaries checked.')
-(OUT/'WORKSHOP.md').write_bytes(text.encode('utf-8'))
+# Channel introduction is maintained separately; regenerating the manual must
+# preserve the workshop's self-contained download and known-limit guidance.
+workshop_intro = (OUT/'WORKSHOP-INTRO.md').read_text(encoding='utf-8')
+assert f'随机与计算系统 {version}' in workshop_intro
+(OUT/'WORKSHOP.md').write_bytes((workshop_intro.rstrip()+'\n\n---\n\n'+text).encode('utf-8'))
 
 ai=markdown.markdown((OUT/'AI-GUIDE.md').read_text(encoding='utf-8'),extensions=['tables','fenced_code','toc','sane_lists'])
 ai_page='<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>随机与计算系统 · AI 使用指南</title><style>body{max-width:1100px;margin:auto;padding:32px 20px;font:16px/1.8 system-ui,"Microsoft YaHei",sans-serif;color:#243431;background:#fffefb}h2{margin-top:40px;color:#145c4d}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ccd8cf;padding:9px;text-align:left;overflow-wrap:anywhere}th,pre{background:#edf3ef}pre{padding:18px;white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}a{color:#176c5b}</style>'+ai+'</html>'
@@ -50,3 +54,11 @@ skill_refs.mkdir(parents=True, exist_ok=True)
 for name in ["AI-GUIDE.md", "AI-INTEGRATION.md"]:
     (skill_refs / name).write_bytes((OUT / name).read_bytes())
 print("Synced standalone Skill reference files from maintained AI docs.")
+
+# The installed Skill must retain a standalone read-only guidance selector.
+skill_scripts = OUT.parent / "skills/letsgal-plugin-random-math/scripts"
+skill_scripts.mkdir(parents=True, exist_ok=True)
+(skill_scripts / "select-host-guidance.py").write_bytes(
+    (OUT.parent / "scripts/select-host-guidance.py").read_bytes()
+)
+print("Synced the read-only guidance selector into the installed Skill.")

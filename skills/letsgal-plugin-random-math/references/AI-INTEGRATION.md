@@ -1,6 +1,6 @@
 # 让 AI 使用随机与计算系统
 
-适用插件：`mixing-entropy.random-math` 2.2.2。验证资料核对日期：2026-09-26；主 Skill 获取渠道说明更新：2026-09-28。
+适用插件：`mixing-entropy.random-math` 2.2.3。资料修订：2026-09-30；运行与外部模型读取沿用各自历史证据，本轮增加辅助安装与Stable／Beta资料路由，不宣称新宿主实机验收通过。
 
 这是 AI 接入说明，与创作者使用手册分开。**安装 LetsGal 插件、规则文件被读取、AI 实际读完指南，是三个不同的步骤。** 插件不能保证所有 AI 自动获得本地文件。
 
@@ -10,14 +10,16 @@
 
 | 要找的资料 | 独立 AI 接入包 | 完整插件包／文档包／源码 |
 |---|---|---|
-| 整个插件 Skill 文件夹 | `Skill/letsgal-plugin-random-math/` | `skills/letsgal-plugin-random-math/` |
+| 整个插件 Skill 文件夹 | `skills/letsgal-plugin-random-math/` | `skills/letsgal-plugin-random-math/` |
 | 统一管理索引条目 | `统一管理索引条目.md` | `docs/ai-integration/PLUGIN-INDEX.entry.md` |
 | 完整 AI 使用指南 | `项目文件/docs/random-math/AI-GUIDE.md` | `docs/AI-GUIDE.md` |
 | 本接入说明 | `开始使用.md` | `docs/AI-INTEGRATION.md` |
 | 待合并规则模板 | `待合并规则/` | `docs/ai-integration/` 中同名模板 |
 | 聊天 AI 开场说明 | `给聊天AI的开场说明.md` | `docs/ai-integration/CHAT-START.md` |
+| 辅助安装／只读资料选择器 | `scripts/install-skill.py`、`scripts/select-host-guidance.py` | 同名 `scripts/` 文件；Skill内另有 `scripts/select-host-guidance.py` |
+| 辅助安装完整性记录 | 包根 `plugin-skill-manifest.json`、`extension.json` | 完整插件发行ZIP中为同名根文件；文档包／源码不是辅助安装入口 |
 
-这里的完整插件包／文档包指包含本次资料的构建；旧发行包可能没有这些文件。找不到时获取本次独立 AI 接入包，不能仅凭版本号相同判断附件齐全。创作者手册包只含人类教程，不包含 Skill。
+这里的完整插件包／文档包指包含本次资料的构建；旧发行包可能没有这些文件。找不到时获取本次独立 AI 接入包，不能仅凭版本号相同判断附件齐全。创作者手册包只含人类教程，不包含 Skill。辅助安装只从本插件GitHub Release的完整插件ZIP或独立AI接入包运行；公开源码根供维护，缺少生成的发行完整性清单，不能直接作为简易安装包。普通用户无需手工生成清单。
 
 从完整插件包接入项目规则时，将 `docs/AI-GUIDE.md` 和 `docs/AI-INTEGRATION.md` 复制到目标游戏的 `docs/random-math/`，再合并相应模板。使用 Skill 时，复制表中的**整个 Skill 文件夹及其参考文件**，无需另装项目规则。
 
@@ -25,7 +27,7 @@
 
 ## 推荐安装位置：配合 GitHub 版主 Skill，或独立安装
 
-本接入包已提供正式插件 Skill：`letsgal-plugin-random-math`，其中 `SKILL.md` 是入口，`references/` 保存详细指南。**安装到哪里，取决于是否已启用支持用户插件目录的 `letsgal-authoring` 主 Skill（历史验收使用 0.1.0-preview.5；2.2.2 未新增模型会话验收）。** 仅看到 `.letsgal-authoring` 目录，不代表主 Skill 已启用。
+本接入包已提供正式插件 Skill：`letsgal-plugin-random-math`，其中 `SKILL.md` 是入口，`references/` 保存详细指南，`scripts/` 保存只读资料选择器。**安装到哪里，取决于当前 Agent 是否已有支持用户插件目录的 `letsgal-authoring` 主 Skill（历史模型验收使用 0.1.0-preview.5；2.2.3 未新增模型会话验收）。** 仅看到 `.letsgal-authoring` 目录，不代表主 Skill 已存在或启用。
 
 这里的主 Skill 指 GitHub 上的 **letsgal-authoring**，通过 [letsgal-authoring-kit Releases](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 获取。下载正式发布的核心包 `letsgal-authoring-kit-<版本>.zip`，完整解压后按包内说明安装到所用的外部 AI 工具，再接入本插件的 Skill。主 Skill 通过 GitHub 提供，不以工坊安装为前提；安装随机与计算系统本体也不会同时安装主 Skill。
 
@@ -34,17 +36,21 @@
 已从 GitHub 获取并安装支持用户插件目录的主 Skill，且当前 AI 能实际读取它时，推荐：
 
 ```text
-~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.2/
+~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.3/
 ├── SKILL.md
-└── references/
-    ├── AI-GUIDE.md
-    └── AI-INTEGRATION.md
+├── references/
+│   ├── AI-GUIDE.md
+│   ├── AI-INTEGRATION.md
+│   └── compatibility/
+│       ├── stable.md
+│       └── beta.md
+└── scripts/select-host-guidance.py
 ```
 
-1. 完整解压本包，找到 `Skill/letsgal-plugin-random-math/`。
-2. 将这个文件夹的**内容**复制到上述 `2.2.2/`，不要额外套一层 `letsgal-plugin-random-math`。缺少目录可新建；已有文件先比较和备份，保留用户补充，不整目录覆盖。
+1. 完整解压本包，找到 `skills/letsgal-plugin-random-math/`。
+2. 将这个文件夹的**内容**复制到上述 `2.2.3/`，不要额外套一层 `letsgal-plugin-random-math`。缺少目录可新建；已有文件先比较和备份，保留用户补充，不整目录覆盖。也可使用下文默认只预览的辅助安装。
 3. 将包内 `统一管理索引条目.md` 合并到 `~/.letsgal-authoring/plugins/INDEX.md`，保留原有条目。不存在时新建索引。同 ID/版本已有条目时更新该条，不反复追加。
-4. 在当前作品的 `LETSGAL.md` 或既有项目说明中记录“使用 mixing-entropy.random-math 2.2.2”及这份 Skill 的实际入口；已有约定时局部合并。
+4. 在当前作品的 `LETSGAL.md` 或既有项目说明中记录“使用 mixing-entropy.random-math 2.2.3”及这份 Skill 的实际入口；已有约定时局部合并。仅安装资料不自动修改作品或启用扩展。
 5. 在新会话使用 `letsgal-authoring`，让它按当前作品选择读取这个插件 Skill。该目录由主 Skill 管理读取，**不是所有 AI 工具原生扫描的技能目录**。
 
 这里的 `~` 是实际运行 AI 的用户主目录。Windows 本机可从文件资源管理器地址栏输入 `%USERPROFILE%` 找到用户目录，再进入 `.letsgal-authoring`；远程、WSL、容器和云端要使用对应环境的用户目录。
@@ -53,7 +59,7 @@
 
 ### 备用：没有主 Skill，安装到所用 AI 的技能目录
 
-无需为了单独使用随机数插件而强制安装主 Skill。完整复制 `Skill/letsgal-plugin-random-math/` 到下表中的一个位置，保留该文件夹名与 `references/`。不要只复制 `SKILL.md`。
+当前 Agent 没有主 Skill 时，无需为了单独使用随机数插件而强制安装主 Skill。完整复制 `skills/letsgal-plugin-random-math/` 到下表中的一个位置，保留该文件夹名、`references/` 与 `scripts/`。不要只复制 `SKILL.md`。有主 Skill 时使用版本化用户插件区，不再将同一资料重复装成独立 Skill。
 
 | AI 工具 | 推荐个人目录 | 仅用于一个作品时 |
 |---|---|---|
@@ -67,6 +73,40 @@
 DSH 需要当前 profile 已启用文件系统技能提供器及技能工具；启动器若另设 DSH_HOME，使用实际位置，不能猜成默认目录。安装本资料包不修改 DSH 配置或重启服务。
 
 新会话检查技能列表，必要时显式调用 `letsgal-plugin-random-math`。工具可根据描述按需选用 Skill，但不保证每次都自动调用；用下文识别问题和实际读取记录验收。只安装自己使用的路径，避免同名不同版本在多个扫描目录同时生效。独立技能目录默认只放当前选择的一个版本；多作品使用不同版本时，优先统一管理或各项目分别安装。
+
+### 简易辅助安装：先预览，再明确执行
+
+从本插件GitHub Release下载完整插件ZIP或独立AI接入包，完整解压后在包根运行下面的Python 3标准库助手。保留包根 `extension.json`、`plugin-skill-manifest.json`、`skills/`与`scripts/`；缺清单或内容哈希不一致会拒绝安装。公开源码根和GitHub的Source code下载不是此安装入口，不需要普通用户手工生成清单。助手不安装依赖、主Skill、Studio或其他客户端。
+
+```text
+python scripts/install-skill.py
+```
+
+默认只检测与预览；阅读它选中的 Agent、实际用户目录、主 Skill 的证据、目标路径、现有内容差异及动作。当前Agent可由已有运行环境检测；不明确时使用 `--agent codex` 或 `--agent claude`。实际技能位置自定义时传 `--skills-root <该Agent技能目录>`；实际运行AI的用户目录自定义时传 `--user-root <用户主目录>`。远程、WSL、容器须在对应环境执行，不能把本机主目录当成远程目录。
+
+预览符合意图后，对同一组参数加 `--apply`：
+
+```text
+python scripts/install-skill.py --agent codex --apply
+```
+
+有主 Skill 时，助手只把本插件知识放入实际用户区的2.2.3目录并补充 `plugins/INDEX.md`；主 Skill 不存在时才独立放到选定Agent目录。索引原文逐字保留并先保存 `INDEX.before-<唯一标识>.md`；不删除旧版本、其他条目、用户文件或未知补充，不修改公共主 Skill 包。既有同路径内容不同、ID／版本不一致、越界或链接重定向等情况停止，不能静默覆盖。相同内容重复执行应报告无需改变。冲突时先比较已有内容，人工合并；不要删除旧资料或强行改路径来绕过保护。
+
+`--source <Skill目录>`只用于明确选择发行包内的一份完整资料，仍强制核对同一包根的插件ID、版本和完整性清单及Skill全部文件哈希，不能绕过门禁。不要只解压脚本后运行，也不要把独立Skill或公开源码根冒充完整发行包。辅助安装成功仅表示文件已安装，Agent是否发现／读取为独立验证，不等于插件已启用、宿主兼容或AI答案正确。
+
+### 按当前作品选择 Stable／Beta 资料
+
+在写入版本相关字段前，运行只读选择器：
+
+```text
+python scripts/select-host-guidance.py --project <目标工程> --studio-exe <实际Studio可执行文件> --sdk-root <目标SDK目录>
+```
+
+也可运行安装后Skill中的 `scripts/select-host-guidance.py`；`--skill-root <实际Skill目录>`可明确入口。没有可读取的可执行文件时，可使用来源明确的 `--host-version 2.3.0-beta.1 --channel beta`，但这是输入声明，不能写成已读取实际进程。`--sample-file <有效调用样本文件>`可重复提供，只记录来源与哈希，不证明章节格式已通过。
+
+项目已有 `LETSGAL.md` 时可只读识别其frontmatter的 `letsgal_studio_exe`、`letsgal_host_version`、`letsgal_channel`、`letsgal_sdk_root`；相对路径按该项目根解析。不强制创建这些字段，不用工程JSON中的任意 `version` 猜宿主版本。选择器记录实际来源、SDK版本与缺项；缺宿主、SDK证据不全或互相冲突时返回退出码2和 `UNKNOWN`，停止猜测相关字段，继续无版本依赖的说明。
+
+退出码0仅表示选择了 `references/compatibility/stable.md` 或 `beta.md`，其 `compatibility_validation` 仍为 `NOT_RUN`。只读所选的一套，再核对当前工程启用插件、实际保存的有效样本与目标SDK。路由检查、安装文件、Agent实际读取和Stable／Beta两个真实宿主运行各自验收；不把新Beta静态SDK比较、旧模型会话或版本号变化写成新的运行PASS。不升级宿主、不替换SDK，也不改作品或账号。
 
 ### 再备用：不支持 Skill 时使用项目规则或上传指南
 
@@ -140,8 +180,8 @@ DSH 需要当前 profile 已启用文件系统技能提供器及技能工具；�
 - [Cursor 项目规则](https://cursor.com/docs/rules)：项目规则目录与 alwaysApply。
 - [DSH 官方指令加载器说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/context/agent-instructions/README.zh.md)：默认候选、首轮注入、预算和不支持的导入语法。本次同时核对本机安装的 0.1.6-alpha.2 实现。
 
-以下为 2.2.1 阶段的历史验证；2.2.2 仅同步文档和 Skill 版本，没有新增模型会话实测。2.2.1 验证了模板路径、Skill 结构及引用，以及 DSH 0.1.6-alpha.2 官方提供器从用户和项目目录发现并读取正文与参考资料。新增两次 Claude Code 2.1.229 隔离会话实测，使用该客户端已有配置中的 DeepSeek 模型：一次自动调用独立插件 Skill，另一次按明确请求调用 letsgal-authoring 0.1.0-preview.5，再按项目声明读取统一插件区的2.2.1资料。工具记录证实实际读取了入口与完整指南；两次均正确解释片段反馈、建池快照、绑定表范围、输出列、十个方法及remaining读档边界。这里的统一插件区是隔离工程明确指定的位置，未向真实用户目录安装；不据此声称所有主目录布局或所有模型均通过。
+以下为 2.2.1 阶段的历史验证；2.2.3 增加辅助安装和资料路由，没有新增模型会话实测。2.2.1 验证了模板路径、Skill 结构及引用，以及 DSH 0.1.6-alpha.2 官方提供器从用户和项目目录发现并读取正文与参考资料。历史两次 Claude Code 2.1.229 隔离会话使用该客户端已有配置中的 DeepSeek 模型：一次自动调用独立插件 Skill，另一次按明确请求调用 letsgal-authoring 0.1.0-preview.5，再按项目声明读取统一插件区的2.2.1资料。工具记录证实实际读取了入口与完整指南；两次均正确解释片段反馈、建池快照、绑定表范围、输出列、十个方法及remaining读档边界。这里的统一插件区是隔离工程明确指定的位置，未向真实用户目录安装；不据此声称所有主目录布局或所有模型均通过。
 
 Claude Code 内使用 DeepSeek 模型不等于 DeepSeek Harness（DSH）客户端验收。DSH隔离模型会话仍缺少可用凭据；Codex新会话发现了Skill摘要，但读取正文的只读命令被执行策略拒绝；Cursor模型会话未实测。测试没有读取、复制凭据或改变用户配置。Skill被发现、模型读到正文、答案正确、目标游戏运行应分别检查；即使本次两种接入成功，也不能保证以后每次都会自动调用。没有接入 LetsGal 内置 AI。
 
-技能目录来源：[Codex](https://developers.openai.com/codex/skills)、[Claude Code](https://code.claude.com/docs/en/skills)、[Cursor](https://cursor.com/help/customization/skills)、[DSH官方提供器](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md)。统一用户区是 letsgal-authoring 主Skill的管理约定，不宣称这些客户端会原生扫描它。本修订交付可复制的Skill目录与推荐位置，没有自动执行安装，也未修改另一工程的导入器。
+技能目录来源：[Codex](https://developers.openai.com/codex/skills)、[Claude Code](https://code.claude.com/docs/en/skills)、[Cursor](https://cursor.com/help/customization/skills)、[DSH官方提供器](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md)。统一用户区是 letsgal-authoring 主Skill的管理约定，不宣称这些客户端会原生扫描它。本修订交付可复制的Skill目录、辅助安装与只读资料选择器；助手默认预览，--apply才执行。没有修改公共主Skill包或另一工程的导入器。

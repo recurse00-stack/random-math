@@ -2,6 +2,8 @@
 from pathlib import Path
 import argparse
 import zipfile
+import runpy
+import json
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -15,9 +17,15 @@ def build(target):
     files = {
         '开始使用.md': 'docs/AI-INTEGRATION.md',
         '统一管理索引条目.md': 'docs/ai-integration/PLUGIN-INDEX.entry.md',
-        'Skill/letsgal-plugin-random-math/SKILL.md': 'skills/letsgal-plugin-random-math/SKILL.md',
-        'Skill/letsgal-plugin-random-math/references/AI-GUIDE.md': 'skills/letsgal-plugin-random-math/references/AI-GUIDE.md',
-        'Skill/letsgal-plugin-random-math/references/AI-INTEGRATION.md': 'skills/letsgal-plugin-random-math/references/AI-INTEGRATION.md',
+        'skills/letsgal-plugin-random-math/SKILL.md': 'skills/letsgal-plugin-random-math/SKILL.md',
+        'skills/letsgal-plugin-random-math/references/AI-GUIDE.md': 'skills/letsgal-plugin-random-math/references/AI-GUIDE.md',
+        'skills/letsgal-plugin-random-math/references/AI-INTEGRATION.md': 'skills/letsgal-plugin-random-math/references/AI-INTEGRATION.md',
+        'skills/letsgal-plugin-random-math/references/compatibility/stable.md': 'skills/letsgal-plugin-random-math/references/compatibility/stable.md',
+        'skills/letsgal-plugin-random-math/references/compatibility/beta.md': 'skills/letsgal-plugin-random-math/references/compatibility/beta.md',
+        'skills/letsgal-plugin-random-math/scripts/select-host-guidance.py': 'skills/letsgal-plugin-random-math/scripts/select-host-guidance.py',
+        'scripts/install-skill.py': 'scripts/install-skill.py',
+        'scripts/select-host-guidance.py': 'scripts/select-host-guidance.py',
+        'extension.json': 'extension.json',
         '项目文件/docs/random-math/AI-GUIDE.md': 'docs/AI-GUIDE.md',
         '项目文件/docs/random-math/AI-INTEGRATION.md': 'docs/AI-INTEGRATION.md',
         '待合并规则/AGENTS.append.md': 'docs/ai-integration/AGENTS.append.md',
@@ -25,12 +33,17 @@ def build(target):
         '待合并规则/random-math.mdc': 'docs/ai-integration/random-math.mdc',
         '给聊天AI的开场说明.md': 'docs/ai-integration/CHAT-START.md',
     }
-    data = {}
+    installer = runpy.run_path(str(ROOT / 'scripts/install-skill.py'))
+    data = {'plugin-skill-manifest.json': installer['manifest_bytes'](ROOT / 'skills/letsgal-plugin-random-math', ROOT)}
+    expected = {name.removeprefix('skills/letsgal-plugin-random-math/') for name in files if name.startswith('skills/')}
+    if set(json.loads(data['plugin-skill-manifest.json'])['files']) != expected:
+        raise ValueError('Skill tree differs from the AI kit allowlist; review new/missing files before packaging')
     for name, relative in files.items():
         source = ROOT / relative
         if source.is_symlink() or not source.is_file():
             raise ValueError(f'Expected regular file: {relative}')
-        data[name] = source.read_bytes().replace(b'\r\n', b'\n')
+        # Preserve Skill bytes so the bundled manifest also verifies after extraction.
+        data[name] = source.read_bytes() if name.startswith('skills/') else source.read_bytes().replace(b'\r\n', b'\n')
     with zipfile.ZipFile(target, 'x', zipfile.ZIP_DEFLATED) as bundle:
         for name in sorted(data):
             info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
@@ -39,7 +52,7 @@ def build(target):
             bundle.writestr(info, data[name])
     with zipfile.ZipFile(target) as bundle:
         assert bundle.testzip() is None
-        assert sorted(bundle.namelist()) == sorted(files)
+        assert sorted(bundle.namelist()) == sorted(data)
     print(f'Built AI kit: {target}; no project rules installed.')
 
 if __name__ == '__main__':
