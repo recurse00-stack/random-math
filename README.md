@@ -35,9 +35,11 @@
 
 ## 给 AI 的独立说明
 
+**发行状态（2026-09-30）：** GitHub main 的源码与说明已更新到2.2.3；v2.2.3 Release及附件因发布页面连接超时，尚未创建／上传。下面的完整ZIP／AI接入包安装步骤适用于附件发布后，或已经取得并核对过的完整包；不要把Source code下载当成安装包。
+
 需要 AI 协助编排剧本时，将 [AI 使用指南](docs/AI-GUIDE.md) 提供给它；[离线阅读版](docs/ai-guide.html) 单独提供。包含十个方法的全部参数、绑定与变量约定、片段反馈范例及功能边界。该文件与人类教程分开，安装插件不代表宿主 AI 会自动读取它。
 
-推荐安装方法见 [AI 接入说明](docs/AI-INTEGRATION.md)。正式插件 Skill 为 [letsgal-plugin-random-math](skills/letsgal-plugin-random-math/SKILL.md)：当前 Agent 已安装 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时，安装到实际用户区 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.3/` 并补充索引；主 Skill 不存在时才独立安装。从本插件 GitHub Release 下载完整插件 ZIP 或独立 AI 接入包，完整解压后在包根运行 `scripts/install-skill.py`：默认只预览，确认路径和差异后用 `--apply` 安装。包根必须保留 `extension.json`、`plugin-skill-manifest.json`、`skills/` 和 `scripts/`；公开源码根不是简易安装入口，不需要普通用户手工生成清单。助手不会将插件知识写进公共主 Skill 包。主 Skill 通过上述 GitHub Releases 的核心包获取，不以工坊安装为前提，也不会随随机插件本体自动安装。项目规则和上传指南作为备用；本版不接入 LetsGal 内置助手。
+推荐安装方法见 [AI 接入说明](docs/AI-INTEGRATION.md)。正式插件 Skill 为 [letsgal-plugin-random-math](skills/letsgal-plugin-random-math/SKILL.md)：当前 Agent 已安装 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时，安装到实际用户区 `~/.letsgal-authoring/plugins/mixing-entropy.random-math/2.2.3/` 并补充索引；主 Skill 不存在时才独立安装。v2.2.3附件发布后，从本插件 GitHub Release 下载完整插件 ZIP 或独立 AI 接入包；已有完整包也可使用。完整解压后在包根运行 `scripts/install-skill.py`：默认只预览，确认路径和差异后用 `--apply` 安装。包根必须保留 `extension.json`、`plugin-skill-manifest.json`、`skills/` 和 `scripts/`；公开源码根不是简易安装入口，不需要普通用户手工生成清单。助手不会将插件知识写进公共主 Skill 包。主 Skill 通过上述 GitHub Releases 的核心包获取，不以工坊安装为前提，也不会随随机插件本体自动安装。项目规则和上传指南作为备用；本版不接入 LetsGal 内置助手。
 
 AI 使用前按目标工程、实际 Studio 完整版本／通道、相关 SDK 与有效样本选择一套资料；`scripts/select-host-guidance.py` 只读生成选择结果，缺项或冲突标为 `UNKNOWN`，不升级宿主。资料选择检查和两个宿主的实际运行分别验收。
 
