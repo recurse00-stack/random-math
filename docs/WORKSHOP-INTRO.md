@@ -1,32 +1,52 @@
-# 随机与计算系统 2.2.3
+# 抽选与数学增强 3.0.0
 
-为 LetsGal 剧本提供随机数、批量数组、文字和数值候选抽取、权重与固定概率、跨调用不重复抽取池，以及数学公式计算。适合掷骰、概率事件、抽卡、奖励和事件轮换。结果写入你创建的变量，剧情分支和奖励由你的剧本接续。
+**让剧本充满变数，让每次游玩都有独特体验**
 
-## 详细指导在哪里？不需要下载源码
+**由原「随机与计算系统」升级而来。** 这是同一插件的3.0.0更新：沿用稳定ID `mixing-entropy.random-math`，旧调用继续兼容。已有工程升级前请先备份，迁移边界见下方说明。
 
-**第一次使用：直接往下看。本页后半部分就是完整的创作者手册，包含术语、安装与变量、第一次掷骰、三个事件各抽一次、表格绑定、输出列、动态反馈、存读档和排障。无需跳转，也不需要下载源码或 AI 接入包。**
+![抽选与数学增强：动态抽取池、玩家选项、公式计算](images/promo-300-hero.png)
 
-- **在线阅读人类教程：** [打开创作者使用手册](https://github.com/recurse00-stack/random-math/blob/main/docs/USER-GUIDE.md)。浏览器直接阅读，无需登录 GitHub、下载仓库或编译。
-- **单独保存离线手册：** [下载创作者手册 HTML](https://raw.githubusercontent.com/recurse00-stack/random-math/main/docs/creator-guide.html)。保存后用浏览器打开，目录、搜索、跳到第几处、结果预览和图片都可离线使用；只下载这一个文件即可。
-- **让外部 AI 协助：** [在线阅读独立 AI 使用指南](https://github.com/recurse00-stack/random-math/blob/main/docs/AI-GUIDE.md)；也可[单独下载 AI 指南 HTML](https://raw.githubusercontent.com/recurse00-stack/random-math/main/docs/ai-guide.html)。人类教程与 AI 规则分开，安装插件不代表 AI 已自动接入；本版未接入 LetsGal 内置 AI，其他工具的实际验证范围见指南。
+为 LetsGal Studio 剧情编排准备的抽取池与计算工具。配置候选、权重和条件，在剧情中抽取、调整，或交给玩家选择。
 
-如果当前 Studio 的详情预览不能打开链接，直接阅读下方完整教程。需要独立版本时，把下面地址复制到系统浏览器（不要下载页面里的 Source code）：
+## 六个清晰的入口
 
-创作者手册在线阅读：
-https://github.com/recurse00-stack/random-math/blob/main/docs/USER-GUIDE.md
+|入口|用途|
+|---|---|
+|随机数|范围整数、小数、单次或批量，自定义骰子面数|
+|放回抽取|从池中抽取，候选保留，可重复出现|
+|不放回抽取|按份数消耗，支持先占用、后确认或取消|
+|调整抽取池|增删、启停、修改权重/概率/份数，批量调整与读取状态|
+|玩家选项|展示合格候选，沿用工程 Choice 界面|
+|计算|算术、安全公式、表函数、取整精度、取模和范围限制|
 
-创作者手册单文件下载：
-https://raw.githubusercontent.com/recurse00-stack/random-math/main/docs/creator-guide.html
+选定操作后显示对应字段，可选执行反馈收进高级设置；已有绑定在收起后仍然生效。
 
-独立 AI 指南在线阅读：
-https://github.com/recurse00-stack/random-math/blob/main/docs/AI-GUIDE.md
+## 把变化放进剧情
 
-工坊使用其“安装／更新”入口；手册和 AI 接入包不是插件本体。本轮2.2.3只更新GitHub，未重新提交工坊。当前条目的实际版本和审核状态以工坊为准。
+**概率随变量变化。** 权重可填写数值变量公式，候选用布尔条件控制参与；筛选后重新计算实际概率。剧情也可以直接调整运行中的池。
 
-**AI Skill 配合说明：** 当前 Agent 有 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时，将插件资料安装到实际用户区并补充索引；主 Skill 不存在时才独立安装。辅助安装默认预览，需要 `--apply` 才写入，保全已有内容并拒绝冲突静默覆盖。主 Skill 通过 GitHub 提供，不以工坊安装为前提。
+**有限次数明确管理。** 不放回池支持同候选多份、按候选或按每份计权。延后消耗用凭证连接抽取与事件完成，避免提前扣掉机会。
 
-## 2.2.3 更新与已知限制
+**选项使用项目自己的界面。** 候选交给玩家选择，输出稳定 ID 与结果。Choice 布局可在官方 UI 编辑器中编排。
 
-本次根据 Studio 2.3.0-beta.1 的接口静态核对更新说明、AI 辅助安装和 Stable／Beta 资料选择，运行代码仍沿用2.2.1，保留原ID、十个方法和存档结构。资料路由与安装检查不代表真实宿主、播放器、存读档或导出已经通过。
+**常用计算直接填写。** 例如 `var("攻击") * 0.8 + 10`；另有指定小数位、绝对值、余数、非负取模、最小/最大值及范围限制。骰子范围可自定，1～20就是二十面骰。
 
-**疑似官方 Bug：** 历史 Studio 2.2.0-beta.1 的文本候选可能“能看到候选，但鼠标点击不回填”，方向键＋Enter或完整手填可用。新Beta本轮未复测，不能宣称修复；本版不承诺拼音检索。四张教程截图继续标注真实旧Beta来源，不冒充新版截图。
+## 界面示例
+
+![插件3.0.0直接公式表单，Studio2.4.0-beta.2](images/v3-math-form-300-beta242.jpg)
+
+上图为插件3.0.0的真实原生表单；顶部横幅为宣传插画。下图为3.0.0-rc.5在同一宿主版本中的项目Choice长文本示例，保留其版本标注。
+
+![插件rc.5项目Choice长文本示例，Studio2.4.0-beta.2](images/v3-choice-rc5-beta242-longtext.png)
+
+## 随包资料与升级
+
+完整插件、人类手册、离线HTML、给AI读取的Skill、预览式安装助手和迁移工具分别提供。创作者先看[使用手册](USER-GUIDE.md)；AI接入步骤看[安装说明](AI-INTEGRATION.md)。图片来源见[宣传素材说明](PROMO-ASSETS.md)。
+
+稳定ID `mixing-entropy.random-math` 保持。旧调用继续兼容；离线迁移先预览、备份与校验，无法证明等价的调用保留。已有作品先备份工程及升级前存档，具体见[迁移与回退](MIGRATION-3.0.md)。
+
+## 使用范围
+
+允许读档重抽与同一进度固定按池选择；固定结果以已建立的池状态为边界，随机不保证每次不同。复杂条件由外部计算为布尔变量，本插件不包含完整世界状态系统。
+
+主要验证环境为Studio2.4.0-beta.2与Windows。Stable完整版本尚未核定，Web/Android未验证；具体覆盖和已知限制见[验证说明](VALIDATION-3.0.md)。

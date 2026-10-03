@@ -44,6 +44,7 @@ export interface ExtensionRenderData<P extends ExtensionProps> {
  */
 export abstract class ExtensionBase<
   P extends ExtensionProps = ExtensionProps,
+  S extends SaveSchema | undefined = undefined,
 > {
   protected data?: P;
   private host?: {
@@ -55,8 +56,12 @@ export abstract class ExtensionBase<
   /**
    * 强类型的存档字段访问 proxy。
    *
-   * 类型从子类的 `static saveSchema` 推导:子类声明
-   * `static saveSchema = defineSave({ lastPage: {...} })`,
+   * 类型由 Extension.withSave(schema) 在公开基类边界显式传入。TypeScript 的
+   * 实例 constructor 类型不会自动收窄成子类静态侧，不能据
+   * `this.constructor.saveSchema` 可靠推导；withSave 会让同一份 schema 同时
+   * 成为运行时静态声明与实例泛型来源，避免两份声明漂移。
+   *
+   * 子类使用 `class Gallery extends Extension.withSave(schema)` 后，
    * `this.save` 自动变成 `SaveAPI<{ lastPage: number }>`,
    * IDE 自动补全 key、值类型校验、错的 key 编译期报错。
    *
@@ -65,10 +70,8 @@ export abstract class ExtensionBase<
    * 运行时由宿主在实例化时通过 __attachSaveProxy 注入。在挂载之前
    * 访问 this.save 会抛错。
    */
-  readonly save: this extends { constructor: { saveSchema: infer S } }
-    ? S extends SaveSchema
-      ? SaveAPI<InferSaveMap<S>>
-      : EmptySaveAPI
+  readonly save: S extends SaveSchema
+    ? SaveAPI<InferSaveMap<S>>
     : EmptySaveAPI = createUninitializedSaveProxy() as never;
 
   constructor(data?: P) {

@@ -10,6 +10,15 @@ import runpy
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = json.loads((ROOT / 'extension.json').read_text(encoding='utf-8'))['version']
 SKILL_FILES = [
+    'skills/letsgal-plugin-random-math/references/examples-v3.json',
+    'skills/letsgal-plugin-random-math/references/images/v3-choice-rc5-beta242-longtext.png',
+    'skills/letsgal-plugin-random-math/references/images/PROVENANCE.md',
+    'skills/letsgal-plugin-random-math/references/images/v3-choice-rc2-custom-longtext.png',
+    'skills/letsgal-plugin-random-math/references/images/v3-choice-rc2-official-branch.png',
+    'skills/letsgal-plugin-random-math/references/VALIDATION-3.0.md',
+    'skills/letsgal-plugin-random-math/references/CHOICE-UI-COMPATIBILITY.md',
+    'skills/letsgal-plugin-random-math/references/MIGRATION-3.0.md',
+    'skills/letsgal-plugin-random-math/references/LEGACY-2.2.3-AI-GUIDE.md',
     'skills/letsgal-plugin-random-math/SKILL.md',
     'skills/letsgal-plugin-random-math/references/AI-GUIDE.md',
     'skills/letsgal-plugin-random-math/references/AI-INTEGRATION.md',
@@ -17,13 +26,16 @@ SKILL_FILES = [
     'skills/letsgal-plugin-random-math/references/compatibility/beta.md',
     'skills/letsgal-plugin-random-math/scripts/select-host-guidance.py',
 ]
-AI_TOOLS = ['scripts/install-skill.py', 'scripts/select-host-guidance.py']
-DOCS = SKILL_FILES + AI_TOOLS + ['docs/ai-integration/PLUGIN-INDEX.entry.md',
+AI_TOOLS = ['scripts/migrate-project.py', 'scripts/install-skill.py', 'scripts/select-host-guidance.py']
+CURRENT_HOST_IMAGES = ['docs/images/v3-math-form-300-beta242.jpg', 'docs/images/v3-weather-candidate-rc5-beta242.png', 'docs/images/v3-weather-inspector-rc5-beta242.png', 'docs/images/v3-events-choice-rc5-beta242.png', 'docs/images/v3-choice-rc4-beta240-player.png', 'docs/images/v3-choice-rc4-beta240-longtext.png', 'docs/images/v3-candidates-rc4-beta242.png', 'docs/images/v3-inspector-rc4-beta242.png', 'docs/images/v3-rand-form-rc5-beta242.png', 'docs/images/v3-choice-rc5-beta242-longtext.png']
+DOCS = SKILL_FILES + AI_TOOLS + ['docs/images/v3-choice-rc2-custom-longtext.png', 'docs/images/v3-choice-rc2-custom-end.png', 'docs/images/v3-choice-rc2-official-branch.png', 'docs/CHOICE-UI-COMPATIBILITY.md', 'docs/images/v3-choice-rc1-beta230.png', 'docs/images/PROVENANCE.md', 'docs/MIGRATION-3.0.md', 'docs/VALIDATION-3.0.md', 'docs/examples-v3.json', 'docs/LEGACY-2.2.3-USER-GUIDE.md', 'docs/LEGACY-2.2.3-AI-GUIDE.md', 'docs/ai-integration/PLUGIN-INDEX.entry.md',
         'README.md', 'CHANGELOG.md', 'RELEASE-NOTES.md', 'LICENSE',
-        'docs/USER-GUIDE.md', 'docs/creator-guide.html', 'docs/AI-GUIDE.md', 'docs/ai-guide.html',
+        'docs/USER-GUIDE.md', 'docs/creator-guide.html', 'docs/AI-GUIDE.md', 'docs/ai-install.html',
         'docs/AI-INTEGRATION.md', 'docs/ai-integration/AGENTS.append.md', 'docs/ai-integration/CLAUDE.append.md', 'docs/ai-integration/random-math.mdc', 'docs/ai-integration/CHAT-START.md',
         'docs/images/variables.png', 'docs/images/new-variable.png',
         'docs/images/method-picker.png', 'docs/images/candidate-table.png', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md', 'docs/VALIDATION-2.2.1.md', 'docs/VALIDATION-2.2.2.md', 'docs/VALIDATION-2.2.3.md']
+
+DOCS += CURRENT_HOST_IMAGES + ['docs/images/promo-300-hero.png', 'docs/PROMO-ASSETS.md', 'docs/readme-preview.html', 'docs/workshop-preview.html']
 
 def archive(paths, generated=None):
     generated = {} if generated is None else generated

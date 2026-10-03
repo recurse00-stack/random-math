@@ -1,19 +1,11 @@
-# Stable 资料选择 · mixing-entropy.random-math 2.2.3
+# Stable资料 · 抽选与数学增强3.0.0
 
-仅当目标工程、实际 Studio 完整版本和 `stable` 通道证据一致时读取本文。本文不是“所有稳定版都兼容”的承诺，也不维护未经证实的最新版号。
+修订2026-10-03。只读路由依据目标工程、实际Studio完整版本／通道、SDK与真实样本；缺失或冲突标UNKNOWN。不自行升级，不继承其他完整版本的运行结论。
 
-## 按工程核对
+当前实际Stable完整版本UNKNOWN。按该工程的SDK和有效样本核对原生列表、enabledWhen、saveSchema与Choice；不复制Beta SDK或降低清单门槛伪装兼容。旧Stable实测不覆盖本候选新实现。
 
-1. 记录工程入口、实际启用插件 ID／版本、Studio 完整版本及来源、通道、目标 SDK 版本及来源、调度方式和有效调用样本。工程中任意名为 `version` 的字段不单独作为宿主版本；不沿用其他工程的 Beta 结论。
-2. 只读选择器成功仅说明应读取 Stable 资料。缺 SDK、宿主版本未知、通道与版本后缀冲突、插件版本不符或缺实际调用样本时，将对应事实标 `UNKNOWN`，暂缓依赖它的新字段／API 写入。
-3. 插件运行实现沿用 2.2.1：十个方法、变量输出、数据库依赖绑定、`saveSchema` 与槽内状态不变。原插件 SDK／依赖保持，不将新 Beta 的 SDK 复制进稳定版工程，不降低清单要求来掩盖缺接口。
-4. 根据该完整版本真实保存的样本、SDK 类型与官方说明确认调用块结构、变量引用和调度方式；不要把参数意图对象直接写成节点。旧版没有已核实新功能时沿用已有流程。
+路由和安装与真实宿主运行分开。新装升级、原生和自定义Choice、展示中存读档、快进导航、关闭重开、播放器和导出NOT_RUN。旧1.21.0／2.2.0-beta.1证据不覆盖当前实现；旧Studio2.0数据库接口问题按实际目标核对。
 
-## 证据边界
+旧Beta鼠标候选回填仍疑似宿主问题，方向键＋Enter或完整手填是历史替代方案，当前未复测。验证使用合成工程，保持目标工程依赖。
 
-- 历史 Studio 1.21.0 有随机、批量、变量条件与槽存档方面的实测；它只覆盖当时实现、场景和平台，不是本轮所有 Stable 版本验收。
-- 历史 Studio 2.0.0 曾复现数据库依赖宿主能力缺失，影响候选表、表来源建池和函数表；范围随机、JSON 数组池与基础计算不依赖该接口。不能因版本更大就推定修复。
-- 2.2.3 本轮没有完成当前 Stable 实例的新装、升级、GUI、播放器、存读档或导出验收。当前 Stable 完整版本和这些运行结果：`UNKNOWN`／`NOT_RUN`，按目标工程实际证据补齐。
-- 新 Beta 的 SDK 静态比较不能证明 Stable 兼容；资料路由通过也不能证明运行通过。安装资料不启用插件，不修改 Studio 或作品。
-
-使用 [AI-GUIDE.md](../AI-GUIDE.md) 的相关方法参数，实际工程样本优先于通用示例。资料依据为随包真实方法定义与原 SDK、[官方扩展开发入口](https://docs.avg-engine.com/extensions/develop/) 和 [官方更新记录](https://avg-engine.com/changelog)；资料修订日期2026-09-30。
+见[AI指南](../AI-GUIDE.md)。官方资料与目标版本交叉核对：https://docs.avg-engine.com/extensions/method 、https://docs.avg-engine.com/extensions/settings-schema 、https://docs.avg-engine.com/extensions/system-slots 。通用文档不等于任意Beta实现。

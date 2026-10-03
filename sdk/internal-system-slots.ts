@@ -13,6 +13,7 @@
  */
 
 export const INTERNAL_SYSTEM_SLOT = {
+  Loading: "internal.system.loading",
   Title:    "internal.system.title",
   Toolbar:  "internal.system.toolbar",
   Save:     "internal.system.save",
@@ -59,10 +60,28 @@ export type InternalSystemMessageTone =
 /** `internal.system.message` 的两种运行时呈现模式。 */
 export type InternalSystemMessageMode = "alert" | "confirm";
 
+/**
+ * 引擎内置确认场景。消息框文档可按场景覆盖文案；没有 copyKey 的调用
+ * 仍完全使用调用方传入的动态文案，避免影响剧本作者创建的系统消息。
+ */
+export type InternalSystemMessageCopyKey =
+  | "archive.delete"
+  | "archive.overwrite"
+  | "archive.clear"
+  | "archive.load"
+  | "system.return-title"
+  | "system.exit";
+
+export type InternalSystemMessageCopyValues = Readonly<
+  Record<string, string | number>
+>;
+
 interface InternalSystemMessageInvocationBase {
   mode: InternalSystemMessageMode;
   title: string;
   message: string;
+  /** 主文案下方的补充说明；缺省不显示。 */
+  description?: string;
   /** 主操作按钮文案；缺省由被绑定的消息框文档提供。 */
   confirmText?: string;
   /** 缺省由被绑定的消息框文档提供。 */
@@ -81,6 +100,10 @@ export interface InternalSystemMessageAlertInvocationPayload
 export interface InternalSystemMessageConfirmInvocationPayload
   extends InternalSystemMessageInvocationBase {
   mode: "confirm";
+  /** 内置确认场景；确认 / 取消模板可据此替换对应动态文案。 */
+  copyKey?: InternalSystemMessageCopyKey;
+  /** 场景文案的命名占位参数，例如存档确认中的 `{slot}`。 */
+  copyValues?: InternalSystemMessageCopyValues;
   /** 取消按钮文案，缺省为“取消”。 */
   cancelText?: string;
   onResolve(value: boolean): void | Promise<void>;
@@ -108,6 +131,7 @@ export interface InternalSystemSlotDef {
  * 运行时只需要 id,这张表是"展示元数据",不影响 slot 行为。
  */
 export const INTERNAL_SYSTEM_SLOTS: Record<InternalSystemSlot, InternalSystemSlotDef> = {
+  [INTERNAL_SYSTEM_SLOT.Loading]: { label: "加载界面", required: true },
   [INTERNAL_SYSTEM_SLOT.Title]:    { label: "标题画面", required: true  },
   [INTERNAL_SYSTEM_SLOT.Toolbar]:  { label: "对话工具栏", required: true  },
   [INTERNAL_SYSTEM_SLOT.Save]:     { label: "存档界面", required: true  },

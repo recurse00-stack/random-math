@@ -18,6 +18,13 @@ import type {
   VariableValue,
 } from "./types/schema";
 import type { DatabaseAPI } from "./types/database";
+import type {
+  VisualUIStylePatch,
+  VisualUITextAppearance,
+  VisualUITextFill,
+  VisualUITextShadow,
+  VisualUITextStroke,
+} from "./types/visual-ui";
 
 export interface FragmentCallOptions {
   /**
@@ -86,10 +93,20 @@ export interface ArchiveAPI {
     options?: { userParams?: unknown; confirmOverwrite?: boolean },
   ): Promise<boolean>;
   load(slotId: number): Promise<void>;
+  /** 删除指定槽位；不弹确认，调用方负责危险操作确认。 */
   delete(slotId: number): Promise<void>;
+  /** 清空全部存档（包含快速存档）；不弹确认。 */
+  clear(): Promise<void>;
+  /**
+   * 把来源槽位移动到目标槽位；目标已有内容时交换两个槽位。
+   * 返回 false 表示来源不存在或槽位无效。
+   */
+  move(sourceSlotId: number, targetSlotId: number): Promise<boolean>;
   quickSave(options?: { userParams?: unknown }): Promise<void>;
   quickLoad(): Promise<boolean>;
   useSlots(): ArchiveSlot[];
+  /** 提前读取存档列表并解码首页缩略图；调用不等待准备完成。 */
+  preloadSlots(): void;
 
   /**
    * 强制把 VariableSystem 里 persistence=shared 的变量立即落盘。
@@ -125,6 +142,10 @@ export interface ArchiveAPI {
 }
 
 export interface HistoryAPI {
+  /** 追加正文历史并通知订阅者；仅写入当前运行历史，不自动持久化或去重。 */
+  append(entry: HistoryEntry): void;
+  /** 按顺序批量追加正文历史，只通知一次；空数组不触发通知。 */
+  appendBatch(entries: readonly HistoryEntry[]): void;
   entries(): HistoryEntry[];
   choices(): Record<string, number>;
   ifResults(): Record<string, boolean>;
@@ -201,8 +222,8 @@ export interface UIAPI {
 export interface VisualUIElementHandle {
   /** 覆写元素 props(浅合并;如按钮文字 { text: "..." })。 */
   setProps(patch: Record<string, unknown>): void;
-  /** 覆写元素样式(浅合并;字段同编辑器样式面板)。 */
-  setStyle(patch: Record<string, unknown>): void;
+  /** 覆写元素样式(浅合并;字段同编辑器样式面板,含高级文字外观)。 */
+  setStyle(patch: VisualUIStylePatch): void;
   /** 显示/隐藏(等价图层眼睛,叠加在设计值之上)。 */
   setHidden(hidden: boolean): void;
   /** 订阅点击(与界面里配置的触发事件并存,都会触发)。返回退订函数。 */
@@ -249,11 +270,12 @@ export interface VisualUIAPI {
   /**
    * 注册“界面即将挂载”回调。回调会在界面元素进入 DOM 前执行并被等待，
    * 适合截图、冻结背景等必须避开界面自身的准备工作。
+   * props 是本次打开参数（例如系统存读档的 mode），旧宿主可能不传。
    * 返回退订函数。
    */
   onBeforeOpen(
     name: string,
-    fn: () => void | Promise<void>,
+    fn: (props?: Readonly<Record<string, unknown>>) => void | Promise<void>,
   ): () => void;
   /**
    * 注册"界面被打开"回调 —— 混合扩展写控制器的标准位置:
@@ -471,6 +493,18 @@ export interface DialogueAPI {
    * @returns 撤销函数。扩展卸载时应调用它摘掉自己这一份。
    */
   useStyle(hook: DialogueStyleHook): () => void;
+
+  /**
+   * 参与决定每句对话的结构化高级文字外观。
+   *
+   * 与兼容旧版样式对象的 `useStyle()` 不同，这个 API 直接作用于 Dialogue
+   * V2 的正文和名字文字层，渐变、图片纹理、外描边与多层阴影不会在兼容
+   * 转换中丢失。它会在所有 `useStyle()` 回调之后执行。
+   *
+   * 返回值只合并明确给出的字段；`textFill` / `textStroke` 返回 null 可清除，
+   * `textShadows` 返回空数组可清除。回调同步执行，不应包含 I/O 或重计算。
+   */
+  useTextAppearance(hook: DialogueTextAppearanceHook): () => void;
 }
 
 /**
@@ -487,6 +521,36 @@ export type DialogueStyleHook = (
   line: DialogueLine,
   style: Record<string, unknown>
 ) => Record<string, unknown> | undefined | null;
+
+/** 当前这句对话的高级文字外观快照。修改它不会改动运行时配置。 */
+export interface DialogueTextAppearanceSnapshot {
+  readonly text: Readonly<VisualUITextAppearance>;
+  readonly name: Readonly<VisualUITextAppearance>;
+}
+
+/**
+ * 单个文字层的增量外观。null 用于显式清除填充或描边；空阴影数组用于清除
+ * 所有阴影。其余未出现字段继续继承当前样式。
+ */
+export type DialogueTextAppearancePatch = Omit<
+  VisualUITextAppearance,
+  "textFill" | "textStroke" | "textShadows"
+> & {
+  textFill?: VisualUITextFill | null;
+  textStroke?: VisualUITextStroke | null;
+  textShadows?: VisualUITextShadow[];
+};
+
+/** 一次逐句外观更新；text 是正文，name 是名字文字。 */
+export interface DialogueTextAppearanceUpdate {
+  text?: DialogueTextAppearancePatch;
+  name?: DialogueTextAppearancePatch;
+}
+
+export type DialogueTextAppearanceHook = (
+  line: DialogueLine,
+  current: DialogueTextAppearanceSnapshot,
+) => DialogueTextAppearanceUpdate | undefined | null;
 
 export interface SoundAPI {
   /** 传项目内的原始素材 URI；宿主会统一完成 hash 映射和资源根解析。 */
@@ -564,6 +628,8 @@ export interface NativeAPI {
  * 引擎要的 `uri`。
  */
 export interface GalleryLayer {
+  kind?: "image" | "particle";
+  particle?: { preset: string; optionsJson: string };
   /** 相对 assets/ 的图片路径(对应 SceneLayer.assetPath)。 */
   assetPath: string;
   /** 视差距离,>0;默认 1。 */
@@ -572,6 +638,22 @@ export interface GalleryLayer {
   offset?: string;
   /** 层名(可选,调试/日志用)。 */
   name?: string;
+  /** 与原图对齐的灰度深度图。 */
+  depthMapPath?: string;
+  /** 与原图对齐的 RGB 法线图。 */
+  normalMapPath?: string;
+  normalStrength?: number;
+  depthStrength?: number;
+  invertDepth?: boolean;
+  flipNormalY?: boolean;
+}
+
+export interface GallerySceneLighting {
+  enabled: boolean;
+  ambient: number;
+  intensity: number;
+  color: string;
+  position: [number, number, number];
 }
 
 /**
@@ -603,7 +685,12 @@ export interface SceneRenderAPI {
   mount(
     container: HTMLElement,
     layers: readonly GalleryLayer[],
-    options?: { displayType?: string },
+    options?: {
+      displayType?: string;
+      lighting?: GallerySceneLighting;
+      /** 调用方卸载/关闭预览时立即终止尚未完成的临时引擎挂载。 */
+      signal?: AbortSignal;
+    },
   ): Promise<SceneRenderHandle>;
 }
 

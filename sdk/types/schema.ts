@@ -82,6 +82,8 @@ export interface ArchiveSlot {
   id: number;
   createdTime: number;
   modifiedTime: number;
+  /** 保存该槽位时的累计游戏时长，单位为秒；旧存档可能没有该字段。 */
+  playTimeSeconds?: number;
   snapshotDataUri: string;
   currentSpeaker: string;
   currentDialogueText: string;
@@ -181,6 +183,7 @@ export interface EngineConfigSnapshot {
 
 /** 已知的 SDK 事件,可用于 SDKContext.subscribe。 */
 export type SDKEvent =
+  | "runtime:started"
   | "dialogue:changed"
   | "choice:opened"
   | "choice:closed"
@@ -196,7 +199,7 @@ export type SDKEvent =
 //
 // 两个独立维度,Studio 和 Engine 共用同一份取值集合:
 //   - VariableScope:变量逻辑分组(Studio 编辑期分类、运行时引用方式)
-//   - VariablePersistence:数据落到哪个存档文件(slot 跟槽位 / shared 跨存档)
+//   - VariablePersistence:变量值在哪个生命周期中保留
 //
 // 详见 /docs/plans/2026-05-19-savegame-variable-scope-design.md
 // ===========================================================================
@@ -215,7 +218,16 @@ export type VariableScope = "project" | "character" | "scene" | "system";
  * 变量的持久化作用域 —— "数据存到哪里"。
  *
  * - "slot":跟着存档槽位走,槽位 N 改值只影响槽位 N。最常见。
+ * - "session":本次 Player 会话内保留,不参与存读档。页面 reload 后仍保留,
+ *              完全关闭 Player 后恢复默认值。
  * - "shared":跨所有存档共享,写到 userData/<gameId>/profile/shared.save。
  *            CG 解锁集合 / 成就 / 玩家昵称这类"档案级"数据。
  */
-export type VariablePersistence = "slot" | "shared";
+export type VariablePersistence = "slot" | "session" | "shared";
+
+/** 运行时 JSON 防御：未知值按历史默认 slot 处理。 */
+export function normalizeVariablePersistence(
+  value: unknown,
+): VariablePersistence {
+  return value === "session" || value === "shared" ? value : "slot";
+}

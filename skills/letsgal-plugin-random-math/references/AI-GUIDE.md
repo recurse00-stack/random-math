@@ -1,372 +1,366 @@
-# 随机与计算系统 2.2.3 · AI 使用指南
+# 抽选与数学增强 3.0.0 · AI 使用指南
 
-适用扩展：`mixing-entropy.random-math`，插件版本2.2.3。文档修订：2026-09-30。运行代码仍沿用 2.2.1；2.3.0-beta.1 本轮完成 SDK 静态审计与隔离类型检查，未完成本插件实机兼容验收。
+修订2026-10-03（sdk.1）。这是插件 Skill 的按需参考资料；AI知识入口是插件Skill根的 SKILL.md；本文位于其references/时向上一层查找。人工安装说明见同目录AI-INTEGRATION.md。插件ID `mixing-entropy.random-math`，模块ID `random-math`。创作者操作手册见USER-GUIDE。随机数不限六面：单个或批量操作设置min=1、max=N、digits=0并包含端点，即可生成1～N的整数；具体字段使用对应操作前缀。
 
-本文件供协助创作者编排 LetsGal 剧本的 AI 阅读，不是插件源码维护记录。人类教程另见 `USER-GUIDE.md` 或离线 `creator-guide.html`。将本文件提供给 AI，或由有文件访问能力的工具读取；文件随包提供不代表 Studio 的 AI 助手必然会自动加载它。
+## 1. 目标工程与资料路由
 
-推荐安装步骤见 [AI 接入说明](AI-INTEGRATION.md)：已安装 [GitHub 版 letsgal-authoring 主 Skill](https://github.com/recurse00-stack/letsgal-authoring-kit/releases) 时，优先放入其按插件 ID/版本分开的统一用户区；没有时，独立安装 letsgal-plugin-random-math 到所用 AI 的技能目录。项目规则和上传指南保留为备用。主 Skill 从 GitHub 核心包按随附说明安装，不以工坊安装为前提。安装 LetsGal 插件本体不等于安装主 Skill，也不等于安装或加载了这份插件 Skill；本版不接入 LetsGal 内置文档助手。
+核对工程实际启用版本、Studio完整版本及通道、SDK、有效章节／变量／Choice绑定样本。先确定实际插件Skill根。安装后的路由命令从Skill根运行 `python scripts/select-host-guidance.py --help`，随后按实际证据传参；完整解压发行包也在包根提供同名工具。缺失标UNKNOWN；只读取所选Stable或Beta资料。不猜最新版、不自行升级宿主。
 
-## 1. 使用前核对
+主要目标Studio 2.4.0-beta.2。开发SDK与目标Studio2.4.0-beta.2随附29文件一致；项目侧声明仅处理未随附且本插件未使用的导出，不提供新宿主能力。依赖版本保持。构建、类型检查、逻辑垫片不证明真实运行；各完整宿主版本及运行文件的证据分别记录，目标工程应核对对应验证范围。历史截图按原版本标注。历史鼠标回填仍疑似宿主问题，方向键＋Enter或完整手填后核对值，不能宣称已修复。
 
-1. 核对项目实际启用的扩展 ID 与版本，再读取当前宿主提供的方法及参数。本文以 2.2.3 参数为准，与 2.2.1 相同；本轮更新资料、辅助安装和 Stable／Beta 路由，没有改写运行算法。抽取池和数组功能在2.2.0已经提供；2.2.1主要补充候选提示、手册与AI资料，不要把这些运行功能误写成新版本首次新增。其他旧版本仍须核对其实际方法。
-2. 先理解用户需要的是一次判定、同批去重、跨调用抽取消费、动态事件资格，还是计算。不要把它们合并成同一种“随机”。
-3. 确认项目现有变量的名字、类型、作用域与保存范围；只补缺少的变量，不覆盖同名变量和已有存档。输出变量必须存在且类型正确，同一调用的输出名称不能冲突。
-4. 使用宿主公开的编辑/调用接口。需要写剧本文件时，先读取该版本剧本格式及一个实际可工作的“调用扩展方法”块，保留原节点身份。下文的参数对象是语义示例，不是可以直接导入的完整剧本 JSON。
-5. 变量选择参数应按当前宿主的变量引用格式填写。不要把本文的示例名称直接冒充内部 UUID；也不要把结果值填到变量选择位置。
-6. 表功能需要数据库依赖绑定。仅看到数据表或方法选项，不等于预览与导出运行接口已通过。
-7. 按目标工程、实际 Studio 完整版本／通道、相关 SDK 与有效样本选择一套资料。主 Skill 已存在时读取版本化用户区；没有时才使用独立插件 Skill。未知或矛盾记录 `UNKNOWN`，不沿用上个项目的 Beta 结论，不升级引擎、替换 SDK 或写入未经核实的新字段。
+## 2. 六入口与配置
 
-### 1.1 升级时区分本机库与工程发行物
+编辑界面的showAdvancedFeedback是纯显示开关，默认false。四项公共reportVar/statusVar/successVar/errorVar仅在展开时显示，但不论开关缺失、false还是true，已有输出绑定都照常执行；不能把收起当成停用输出，也不要在迁移时清空绑定。运行算法及结果契约不变。
 
-以下为历史证据，本轮 2.2.3 未重跑：Studio 2.2.0-beta.1 曾实测本地2.2.0→2.2.1升级：当前工程已含同ID发行物时，复制导入ZIP可能报重复ID；在未加入本插件的临时工程导入新版并确认覆盖本机库，然后切回原工程，通过“改用这份本机源码 → 替换项目发行物”更新。必须核对两边版本及来源，先保留工程和旧存档；不要改ID、删项目插件目录或重建游戏来绕过错误。源码关联用户须先核对自有修改，不盲目覆盖。
-
-本机库已更新不等于工程已经使用新版。合成验收中，旧卡片／变量文件哈希保持一致，旧存档读回 first=B、left=2，续抽 second=C、left=1、ok=true。只证明此前本地更新与这一固定池续抽案例；不冒充工坊在线升级、全部固定序列或其他平台验收。完整人类步骤见 USER-GUIDE.md 第2.1节。AI资料副本仍须按 AI-INTEGRATION.md 单独更新。
-
-### 1.2 Stable／Beta 资料选择
-
-优先读取当前作品 `LETSGAL.md` 中的明确版本选择，再核对实际实例的完整 FileVersion／关于页、通道、项目启用插件、目标 SDK 与可工作样本。`project.json` 中任意名为 `version` 的字段不能单独证明 Studio 版本；SDK 版本也不能单独证明宿主通道。实际启用插件与资料版本不一致时先说明差异，不默认选择最新目录。
-
-随资料包的只读选择器示例：
-
-```text
-python scripts/select-host-guidance.py --project <目标工程目录> --studio-exe <实际Studio可执行文件> --sdk-root <该目标SDK目录>
-```
-
-也可显式提供 `--host-version 2.3.0-beta.1 --channel beta` 替代可执行文件；这属于输入声明，不能写成已读取进程或关于页。选择器只读工程和版本证据，不改变 Studio、SDK、作品或账号。使用安装后的 Skill 时，执行其随附选择器，并用 `--skill-root <实际Skill目录>` 明确资料入口。`--sample-file <有效调用样本>`可重复使用，只记录样本来源与哈希，不证明样本schema通过。
-
-读取 JSON 结果中的来源、缺项、冲突、所选资料和 `compatibility_validation`。退出码0仅表示资料路由成功，运行验收仍为 `NOT_RUN`；退出码2表示 `UNKNOWN`，不得继续猜测版本相关字段。成功后仅阅读 `references/compatibility/stable.md` 或 `beta.md` 中与当前工程匹配的一份。有效调用样本、实际参数、真实宿主／播放器行为仍须另核；样本没有出现新字段也不能单独证明该字段不支持。
-
-2026-09-30 本插件对照实装 Studio 2.3.0-beta.1 的 SDK，所用方法、变量、数据库依赖和 saveSchema 接口静态保留；在隔离目录采用该官方SDK并保留原脚手架类型桩，对现有src的TypeScript无输出检查通过。新版可选保存声明与调度入口不要求现有插件改写。原SDK1.21.0与实现保留，不拷入 Beta SDK 为旧稳定版升级接口。官方 2.3.0-beta.1 更新记录没有声明修复本插件的文字候选鼠标回填；当前在线开发文档标注 v2.0，不能把整站最新说明视为 Beta 专属规范。上述检查不证明新宿主实际运行通过。
-
-## 2. 功能选择与边界
-
-| 用户意图 | 采用方案 | 不能误写成 |
+|入口ID|用途|边界|
 |---|---|---|
-| 掷骰、范围数值 | `rand`，`mode=fresh` | 读取结果变量就会再次随机 |
-| 第一次抽定，当前存档沿用 | `rand`，`mode=sticky`，独立 `fixedKey` | 跨存档全局防重、不可读档重抽 |
-| 一次抽多项，本批不重复 | `rand-pick` / `rand-pick-number`，`replacement=without` | 下一次调用仍记住上一批 |
-| 多次调用持续移除已抽项 | `deck-create` → 多次 `deck-draw` | 每次抽前重建池 |
-| 洗牌一次，按顺序抽 | 抽取池 `mode=fixed` | 不管读回哪个时点都固定相同结果 |
-| 读档后允许从剩余项重新随机 | 抽取池 `mode=remaining` | 真随机/硬件熵、保证下次不同 |
-| 执行片段后改变事件资格 | 普通列表的权重表达式读变量；片段结束时显式修改变量 | 插件自动监听任意片段完成，或自动修改已建抽取池 |
-| 运行时随意增删改候选行 | 当前插件没有对应方法；先解释限制 | 凭空调用 `add-item`、`remove-item`、`update-weight` |
-| 读JSON数组中的第几项 | 使用宿主已验证的数组能力；或建立抽取池逐项取出 | 凭空增加本插件的数组下标方法 |
+|rand|随机数／清除固定记录|旧number返回保留；完整参数generate、简洁操作single-fresh/batch-fresh/single-fixed/batch-fixed、清除reset|
+|draw-replace|放回抽取|指定持久池，不减少候选|
+|draw-without|不放回抽取|action=draw/batch/confirm/cancel|
+|pool-update|调整抽取池|初始化、导入、增删改、批量、读取、重置删除|
+|player-choice|玩家选项|等待官方Choice，不快进代选|
+|calc|算术、表达式、表函数|保留旧返回和默认行为|
 
-扩展方法的完整引用采用 `<扩展ID>/<方法ID>`，例如 `mixing-entropy.random-math/deck-draw`。宿主调用块的字段名和参数封装必须以实际格式为准。
+四个新增动作无returns，不放入If候选；rand/calc保留旧If契约。作者检查在只读面板，剧情读取状态用pool-update/inspect。
 
-## 3. 数据、绑定和输出
+rand缺省action及generate继续读取原字段，默认不变，保证旧If和动态绑定不被切换模式。新编排选择简洁操作，参数使用`操作__字段`，例如`single-fresh__min`、`single-fresh__outVar`；successVar/errorVar仍共享。单个操作固定count=1，批量操作默认count=2；只读取所选操作的专属输入，忽略其他操作保留的隐藏值。固定操作沿用原fixedResults、固定记录名与adopt语义；reset使用resetKey，不清空输出。将既有调用改成简洁操作必须映射参数，不能只修改action。
 
-### 3.1 数据表依赖
+原生设置数组：pools、candidates、adjustments。池字段id/name/kind(with或without)/valueType(text或number)/probability(weight或percent)/quantityWeight(candidate或unit)/random(fixed或fresh)。候选字段poolId/id/label/value/rate/quantity/enabled/condition/data。稳定ID区别显示名；同文字不同ID允许。调整目录同batchId按行顺序，op、candidateId或candidateIdVar、amount、when及内容字段。
 
-| 逻辑别名 | 显示名 | 契约 | 接受版本 | 读写 |
-|---|---|---|---|---|
-| `pickTable` | 随机候选表 | `mixing-entropy.random-math.pick-table` | `^1.0.0` | 只读 |
-| `funcLib` | 函数规则表 | `mixing-entropy.random-math.func-lib` | `^1.0.0` | 只读 |
+首次有效使用自动初始化；读取或条件false不初始化。作者配置、运行状态、旧数据库互不回写，耗尽不补满。reset按当前配置重建，有占用拒绝。配置改名不改稳定ID。
 
-宿主负责寻找兼容表、创建模板和绑定。别名不是文件路径或表标题，重命名普通数据表不会自动让它兼容。当前插件只有一个 `pickTable` 绑定位置，不能在每个方法卡片任意指定一张不同的表。不要绕过绑定直接读取项目数据库文件。
+### 计算增强
 
-候选表基础字段为 `pool`（分组文字）、`label`（候选内容）、`weight`（数字、表达式或固定百分比），记录还有宿主生成的稳定 `id`。函数表字段为 `name`、`expr`、`desc`。`field` 默认 `label`，指定的是读取哪列，不是结果变量或池名。额外输出列必须使用表中真实字段名。
+calc保持旧op和number返回契约；新增op为expr/ceil/trunc/round-digits/abs/remainder/mod/min/max/clamp。新字段只读取当前op对应的`op__字段`，可填有限数值或安全变量公式。expr__expression直接求值，无需函数规则表；单值操作用__value，双值用__a/__b，round-digits另有__digits，clamp另有__min/__max。精确字段见参数表。
 
-`poolScope=named` 按 `pool` 筛选，但 `pool` 空时兼容全表；`default` 仅空池名；`all` 是已绑定候选表的全部池，不是项目所有表。编辑器的“搜索这张表”是多字段关键词筛选，不能当作运行时精确池选择。
+示例意图：`{"op":"expr","expr__expression":"var(\"攻击\") * 0.8 + 10","outVar":"damage","successVar":"ok","errorVar":"error"}`。变量必须是有限数值，不能把文本或布尔隐式转为数值；先声明，再按宿主实际绑定格式编排。直接公式不接受裸x/y/z/w、不调用旧表函数。支持原内置函数和ceil/trunc/abs/roundDigits/remainder/mod；旧表的同名自定义函数不受新增名称影响。池表达式没有新增这些函数，需要时先calc输出再引用。
 
-### 3.2 变量与错误
+round-digits与roundDigits的位数为0～6整数，按十进制表示舍入，半值远离零，1.005→1.01、-1.005→-1.01；安全精度溢出报错。旧round仍为Math.round规则，-1.5→-1。remainder(-7,4)=-3；mod(-7,4)=1且模数必须正数。clamp下限不得大于上限。失败返回-1且保留旧输出；合法结果也可为-1，必须看successVar/errorVar，不能只比较返回值。直接计算不推进池随机状态。
 
-每次调用建议填写开关 `successVar` 和文本 `errorVar`。成功清空错误；正常配置失败保留旧结果，所以不能把结果不为空当成成功，也不能只凭返回值 `-1` 判错（合法计算也可能得到-1）。先检查状态，再使用结果。
+## 3. 概率、条件与事务
 
-数值方法使用数值变量；文字结果、JSON数组和报告使用文本变量。JSON数组不是宿主原生数组变量。例如文本值 `"[1,2,3]"` 描述存储类型，实际字段中填写 `[1,2,3]`，不能多包一层字符串引号。数组输入只支持同一结果类型的值，不接受任意对象；`arrayVar` 选定后优先于 `arrayJson`，不是两者合并。
+权重／基础百分比分离，percent合计100且不带%后缀。排除停用、条件false、无可用份数后归一化；按unit额外乘可用份数。10份A/1份B、等权重时candidate=50/50，unit=10/11和1/11。20/30/50排除第三项后40/60。空签显式配置，无隐式未中奖。
 
-批量前缀 `item` 对应 `item_1`、`item_2`……；必须预先建立全部逐项变量。四种输出规则不能混用：
+set-percent指定部分值，其余按原比例分配。set-rate/add-rate仅weight；set-quantity/add-quantity仅without，不能负数或小于占用。数值支持安全表达式和var("变量名")；新池不直接支持自定义表函数名，先用calc求值再引用变量。条件仅一个布尔变量名，复杂世界规则由外部先算布尔。缺失／错误类型明确报错。
 
-| 方法 | `count=1` | `count>1` |
-|---|---|---|
-| `rand` | 数值 `outVar`；`reportVar`也是JSON数组 | `prefix`或`reportVar`至少一个；返回数量 |
-| `rand-pick` | 文本 `outVar` | `outVar`写JSON文本；可加文本`prefix`；返回JSON文本 |
-| `rand-pick-number` | 数值 `outVar` | 数值`prefix`必填，即使已填`reportVar`；返回数量 |
-| `deck-draw` | `outVar`取决于池的数值/文字类型；返回JSON数组文本 | 逐项`prefix`和/或JSON`reportVar`接结果；不要把多项塞进单项`outVar` |
+候选rate和set-rate的amount可保留`var("好感度")`或`var("好感度") + 10`，在每个抽取动作开始读取当前数值变量；已初始化池同样生效，单次批量使用同一快照。add-rate按执行时求值并保存固定数值，set-percent及其比例重分配同样保存固定数值。不要把一次调整描述为持续绑定；需要持续加成使用set-rate表达式。候选基础百分比表达式每次求值后仍须合计100。变量缺失、类型错误或负权重必须报错；零权重不参与随机抽取。实际概率还受条件、启停、余量及份数计权影响。
 
-列表单次 `outIdVar` 是普通ID文本；列表批量及抽取池 `outIdVar` 是JSON ID数组。报告变量和方法返回值并不总是相同：建池的 `outVar` 是完整池报告，而返回值是数量。
+批量在副本校验，全部成功提交；输出变量预先声明、类型匹配、不能别名冲突。一个批量使用同次变量快照。调整组1～100项、一个目标池；全部when=false跳过不建池。candidateIdVar填变量名，取出的值必须文本候选ID。
 
-## 4. 权重与概率规则
+immediate立即消耗；deferred先占用再凭证确认／取消。相同方向重复处理幂等，不能确认后取消。取消释放占用但不回退随机。remaining包括reserved，available=remaining-reserved。占用候选不能删除，池不能重置删除。
 
-- 全部权重未填时均匀抽取；部分填写时空权重按0。
-- `10` 是相对权重，`10%` 是固定概率。百分号后缀只接受数字，不能写 `var("rate")%`；计算表达式没有取模运算。
-- 先分配固定概率，余量由相对权重分摊。例如 `10%`、`2`、`3` 对应10%、36%、54%。
-- `var("变量名")` 每次普通列表调用读取当前变量；缺变量、坏表达式、负数和非有限值会失败。
-- 固定概率总和超过100%失败；恰好100%时相对权重不参与。剩余概率大于0却没有正相对权重时默认失败。
-- `emptyPolicy=uniform` 只能在明确需要时采用；它不会修复坏表达式或负权重，也不会覆盖固定概率使 `0%` 重新参与。
-- 同批无放回抽取的后续概率会变化，重复规则按行区分；同内容不等于同一行。
-- 概率检查用 `preview-pool`，不消耗抽取池。少量试抽不用于证明概率正确。
+fixed保存种子与进度，只保证建池后的同状态、条件和操作；调整候选或概率可以改变结果。建池前不保证固定；各存档独立；fresh用新随机值但不保证结果一定不同。
 
-## 5. 抽取池、保存和片段反馈
+抽空或没有合格选项时，statusVar为empty、successVar为false、errorVar提供非空原因；完整报告保留EMPTY_POOL。抽取失败不消耗、不改写已有结果数组／单项结果。旧调用接管新池后也保留这一失败保护，旧reportVar仍是结果数组，不得当成新版完整诊断报告。先判断状态再消费输出，错误中文用于说明，不作为稳定机器标识。
 
-### 5.1 生命周期
+## 4. 玩家选项与回放
 
-给每轮/事件池设置明确 `key`（1～128字符）。建立一次，然后按需要取出；同名池已存在时再次建立报错。取完不会自动补回；要求数量大于余量时整次失败，不部分扣除。`deck-peek` 不消耗；`deck-reset` 删除对应池后才能开始新轮，不清空结果变量。
+使用internal.system.choice和项目原Choice绑定，originalIndex映射稳定候选ID。展示enabled且条件满足、有可用份数的候选，各一个按钮；**权重零也可主动选择**。无选项返回empty，不恢复条件排除项。
 
-建池时将候选内容、权重和公式结果做成快照；之后原表、原数组变量、权重变量变化均不修改已建池。默认 `uniqueBy=value` 合并相同结果并合并权重；`row` 保留相同内容的不同副本。数值按计算结果去重，文字区分大小写和空格。
+展示前保存pending，选择时再次验证条件和份数；过期选择不扣除、不输出成功。关闭未选skipped；运行取消保留pending供恢复。重复回调受保护，已完成runImmediately不再次扣除。rc.5在2.4.0-beta.2实测条件失效后拒绝、同请求重开双击仅扣一份、调度回退再前进无重复扣除、等待时退出调试清理UI。展示中SL及其他字节／平台的证据单列于VALIDATION-3.0，不能由这些用例推断所有自定义主题或取消组合。
 
-`fixed` 在建池时确定完整顺序，之后依次取出；`remaining` 在每次取出时从剩余候选中随机选择并移除。均是伪随机，不提供安全随机保证。池状态随当前槽存档；读回抽取前存档会恢复当时未消费的内容。普通文本源数组不会被插件改写。
+输出后接剧情分支和pool-update，不内置任意变量修改或片段调用。同池多个待选点用不同requestKey。
 
-`sticky` 的固定数值记录与抽取池是两套状态。`fixedKey` 为空时按 `value:outVar`、`batch:prefix`、`array:reportVar` 派生；复用输出变量可能意外复用固定记录，因此独立事件建议显式命名。`fixedPolicy=adopt` 只在明确继承合法旧结果时使用，不能把默认值当作已抽结果。
+Choice显示跟随项目绑定；检查面板可只读显示宿主返回的绑定。长列表裁切需按人类资料CHOICE-UI-COMPATIBILITY.md调整项目副本；不得修改宿主安装文件、全局注入CSS或自动抢占插槽。fresh重新取随机值仍可碰巧同结果；固定进度不保证建池前读档或内容／条件改变后的相同结果。
 
-### 5.2 执行片段后的自动反馈范例
+## 5. 输出和世界状态边界
 
-目标：完成“调查房间”片段后不再抽到它，并解锁“查看线索”。采用普通列表和变量权重，不采用冻结候选的不重复抽取池。
+schemaVersion=1；status=ok/skipped/empty/error；poolId；items[{id,label,value,quantity,data?}]；receiptId；remaining/reserved/available；errorCode/message；检查时details。放回池remaining/available=null。successVar在ok或skipped为true；抽取／选择后先检查status=ok再消费结果；若解析完整报告，再要求items非空。初始化、读取或调整可成功且items为空。
 
-准备当前存档数值变量 `room_available=1`、`clue_available=0`，以及文本 `picked`、开关 `ok`、文本 `error`。表数据：
+单项变量数量1时写；批量使用valuesVar/idsVar文本JSON，prefix可选。失败旧结果可能保留，必须先查状态。数组不是直接调用片段的指令。未来世界状态通过布尔条件、数值输入、稳定ID与版本化JSON输出协作；data只透传，不执行，不假造复杂世界状态接口。
 
-| pool | label | weight |
-|---|---|---|
-| explore | 调查房间 | `var("room_available")` |
-| explore | 查看线索 | `var("clue_available")` |
-| explore | 结束探索 | `1` |
+## 6. 参数意图（不是可直接导入的章节）
 
-调用 `rand-pick`，`poolScope=named`、`pool=explore`、`field=label`、`count=1`、`outVar=picked`、`successVar=ok`、`errorVar=error`。先判断 `ok`，成功后根据 `picked` 显式分支到片段。候选文字或行ID不会自动变成片段跳转。
+放回：`{"poolId":"weather","count":1,"outVar":"result","idVar":"candidate","statusVar":"status"}`。
 
-在“调查房间”真正完成的出口，使用宿主的设置变量操作将 `room_available=0`、`clue_available=1`，然后返回抽取处。中断/放弃的出口不要误执行完成反馈。下一次普通列表调用才应用新权重；已抽出的当前结果不会回溯改变。保留“结束探索”权重1可避免全部事件关闭后全零报错。
+延后消耗：`{"action":"draw","draw__poolId":"bag","draw__count":1,"draw__consumption":"deferred","draw__receiptVar":"receipt","statusVar":"status"}`。确认用action=confirm，confirm__receiptId绑定receipt的值。
 
-若事件允许再次解锁，再由用户指定的剧情条件恢复变量。不要宣称插件有片段完成监听器、自动回调注册接口或运行时行修改功能。修改变量是作者显式配置的剧情操作。
+调整：`{"action":"add-rate","poolId":"reward","add-rate__candidateId":"a","add-rate__amount":"2","when":"event_completed"}`。动态候选ID必须按当前宿主真实绑定格式，不能将变量名作为候选字面值。
 
-## 6. 可复制的参数意图范例
+玩家选项poolId=events、requestKey=day1-events、idVar=candidate；之后以candidate分支，完成事件后调整池。五个完整人类案例见USER-GUIDE，配套参数数据见同目录examples-v3.json（完整包位于docs/，安装后的Skill位于references/）。所有示例是字段意图，不能直接作为章节节点导入。
 
-以下对象用于核对参数含义，**不是完整剧本文件或可直接导入的节点**；变量项需转换成宿主实际引用形式。
+## 7. 升级与兼容
 
-### 六面骰
+八个旧方法隐藏仍注册：deck-create/deck-draw/deck-peek/deck-reset/reset-fixed/rand-pick/rand-pick-number/preview-pool；showLegacyMethods默认false只控制新建列表。完整旧参数另存LEGACY-2.2.3-AI-GUIDE.md，不能用历史规则覆盖新池。
 
-```json
-{"method":"mixing-entropy.random-math/rand","params":{"mode":"fresh","min":1,"max":6,"digits":0,"includeMin":true,"includeMax":true,"count":1,"outVar":"roll","successVar":"ok","errorVar":"error"}}
-```
+离线工具在完整解压发行包根的scripts/migrate-project.py；安装后的Skill只包含只读路由脚本，不安装迁移器到用户知识区。从包根执行：preview读取指定project/variables/extensions和chapters；apply核对原文并生成工程外全新备份；restore拒绝覆盖转换后的新编辑。不扫描或修改saves，不运行时改工程。
 
-准备数值`roll=0`、开关`ok=false`、文本`error=""`；先判断`ok`，再判断`roll>=4`进入成功剧情。测试范围反向时应报错并保留旧roll。
+当前自动映射普通固定记录清除、持久取出、仅余量读取、删除及calc字段；If、动态控制值、未知输出声明、旧报告格式、旧建池重复错误／固定顺序、旧表来源与特殊概率保留隐藏兼容。当前旧表放回及旧表同批不重复不自动转换，继续兼容执行，不把临时不重复变成持久池。不宣称全部无损迁移。保留节点ID、绑定对象和未知字段；用户选择真实目标后仍先预览。
 
-### 三事件一轮不重复
+drawDecks/fixedResults旧字段保留。接管后旧调用与新调用读取同一有效状态；剩余项目、drawn、固定顺序保持；已耗候选历史UNKNOWN，不补满。主动调整已接管旧固定池后转为新版剩余抽取。新存档不保证降级，回退用升级前备份。详见MIGRATION-3.0。
 
-```json
-{"method":"mixing-entropy.random-math/deck-create","params":{"key":"events","source":"array","arrayJson":"[\"调查\",\"休息\",\"交谈\"]","valueType":"text","mode":"fixed","uniqueBy":"value","successVar":"ok","errorVar":"error"}}
-```
+## 8. 实际方法参数
 
-建池成功后才进入循环。文本`picked`、数值`left`预先创建，每次调用：
+<!-- PARAMETERS-BEGIN -->
+### 随机数：rand
 
-```json
-{"method":"mixing-entropy.random-math/deck-draw","params":{"key":"events","count":1,"outVar":"picked","remainingVar":"left","successVar":"ok","errorVar":"error"}}
-```
+选择单个／批量及重抽／固定；完整参数保留既有调用。也可清除指定固定记录。
 
-成功时按picked显式分支；完成后left>0继续，left=0结束。不要再次经过建池卡片。新轮使用`deck-reset`且key仍为events，再建池。要允许读档重抽剩余项，只将建池mode改为remaining，已有池需先按用户意图结束/重置。
+返回：number，单次结果／批量数量；清除成功1、失败-1。
 
-## 7. 公式和计算
-
-`calc`支持加、减、乘、除、幂、平方根、向下取整、四舍五入，以及函数表中的自定义函数。普通计算传`a/b`，平方根/取整只使用`a`；自定义函数用`op=func`、`funcName`和`x/y/z/w`。
-
-表达式只支持白名单：数值、`x/y/z/w`、`+ - * / ^`、括号、比较与三元条件、`sqrt/pow/floor/round/min/max/clamp`、`var("name")`和已定义表函数。幂右结合且优先于负号；负数底数应加括号。禁止递归，不是JavaScript环境，无任意脚本、网络或文件能力。
-
-例：函数`damage`的expr为`max(0,round(x*y-z))`；x=20、y=1.5、z=4得到26。不能用数值字符串拼接文本或把任意对象传给公式。
-
-## 8. 验证与交付给用户
-
-规模边界：单次抽取1～100整数；范围随机精度0～6且每个放大后端点绝对值不超过2^48。单表/单池最多10000项，同一存档最多100个抽取池、剩余项合计最多20000；空池仍占名额，删除需明确调用重置。数组输入最多1000000字符，池存档合计最多4000000字符。固定随机记录最多10000条。不要并行操作同一实例的抽取池方法。
-
-函数表最多1000行，表达式最多4096字符，解析深度和调用深度最多32，每次求值最多4096次函数调用。除零、非有限结果和非法定义必须走错误分支。数值列表会先验证候选公式，不能假设权重为0就可以保留坏公式。
-
-- 最小验证先查成功状态、变量类型、范围；再测试无效参数时旧结果没有冒充新结果。
-- 表格案例查绑定和概率报告；片段反馈案例核对修改前后候选资格，不能只看参数文字。
-- 抽取池查数量、去重、抽空、重置和真实存读档。需导出时再查目标播放器。
-- 程序模拟只能证明插件逻辑在该模拟上下文下通过，不能证明Studio数据库接口、界面操作、存档或导出可用。不要写没有执行过的PASS。
-- Studio 2.0.0曾存在“当前宿主没有为数据依赖提供项目数据库能力”的已复现问题。历史2.2.0-beta.1合成工程的实时预览及此前验收的Windows独立播放器已通过文字／数值批量与函数表求和的条件检查；这不是本轮2.3.0-beta.1实测，其他宿主／平台仍须单独验证。出错时保留信息，不修改SDK或绕过项目数据权限。
-- 最终向创作者说明增加了哪些变量、表行、调用与分支，反馈发生在哪个出口，失败走哪里，以及哪些检查尚未执行。不要以“已写文档”冒充功能已发布。
-
-## 9. 方法与参数完整索引
-
-以下索引沿用 2.2.1 实际方法定义，2.2.3 未改变这些方法。`variable`表示变量选择项；省略可选输出表示不写该变量。显示条件只控制编辑器显示，不代表可以忽略类型或运行约束。没有默认值的参数不应凭空补一个。
-
-### 建立不重复抽取池 `deck-create`
-
-从候选表或JSON数组建立持久抽取池。重复建立同名池会报错，重开一轮须先重置。
-
-返回：`number`；池内项目数量；失败-1。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `key` | string；默认`""` | 抽取池名称（独立命名，随存档）；必填 |
-| `source` | enum；默认`"table"` | 来源；选项 `table` 随机候选表、`array` JSON数组 |
-| `poolScope` | enum；默认`"named"` | 候选范围；选项 `named` 指定池（空名称兼容全表）、`default` 仅未命名池、`all` 全部池 |
-| `pool` | string；默认`""` | 池名；显示条件`{"field": "poolScope", "equals": "named"}` |
-| `field` | string；默认`"label"` | 输出列 |
-| `emptyPolicy` | enum；默认`"error"` | 剩余概率无正权重时；选项 `error` 不抽取并报告错误、`uniform` 明确允许均匀回退 |
-| `arrayJson` | string；默认`""` | JSON数组（如 ["A","B","C"] 或 [1,2,3]）；显示条件`{"field": "source", "equals": "array"}` |
-| `arrayVar` | variable；未声明默认值 | 从文本变量读取JSON数组（优先于上方文本）；显示条件`{"field": "source", "equals": "array"}` |
-| `valueType` | enum；默认`"text"` | 结果类型；选项 `text` 文字、`number` 数值（表中允许公式） |
-| `mode` | enum；默认`"fixed"` | 抽取方式；选项 `fixed` 建立时洗牌，之后依次抽取、`remaining` 每次从剩余项随机抽取（可读档重抽） |
-| `uniqueBy` | enum；默认`"value"` | 相同内容处理；选项 `value` 合并相同结果（权重相加，保留首项ID）、`row` 按行／数组位置区分（相同内容可再次出现） |
-| `outVar` | variable；未声明默认值 | 初始池报告（JSON文本，可空） |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 从抽取池取出 `deck-draw`
-
-跨多次调用持续不重复。抽出的项目从当前槽的池中移除；余量不足整批失败，不自动补回。返回结果JSON数组。
-
-返回：`string`；结果JSON数组；失败空串。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `key` | string；默认`""` | 抽取池名称（独立命名，随存档）；必填 |
-| `count` | number；默认`1` | 本次取出数量；最小1；最大100 |
-| `outVar` | variable；未声明默认值 | 单项结果（文字／数值，与建池类型一致）；显示条件`{"field": "count", "equals": 1}` |
-| `prefix` | string；默认`""` | 批量逐项前缀（可空，需预先声明 前缀_1…N） |
-| `reportVar` | variable；未声明默认值 | 本次结果数组（JSON文本，可空） |
-| `outIdVar` | variable；未声明默认值 | 本次行ID数组（JSON文本，可空） |
-| `remainingVar` | variable；未声明默认值 | 剩余数量（数值，可空） |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 查看抽取池／剩余数组 `deck-peek`
-
-不抽取、不洗牌。返回总数、已抽数量、剩余数值／文字数组和ID数组。
-
-返回：`string`；池报告JSON；失败空串。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `key` | string；默认`""` | 抽取池名称（独立命名，随存档）；必填 |
-| `outVar` | variable；未声明默认值 | 池报告（JSON文本，可空） |
-| `arrayVar` | variable；未声明默认值 | 仅剩余结果数组（JSON文本，可空） |
-| `remainingVar` | variable；未声明默认值 | 剩余数量（数值，可空） |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 重置／删除指定抽取池 `deck-reset`
-
-删除指定池记录；不清空已有结果变量。再次建立后开始新一轮。
-
-返回：`boolean`；是否成功。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `key` | string；默认`""` | 抽取池名称（独立命名，随存档）；必填 |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 随机数 `rand`
-
-按指定精度等概率抽取。单次返回结果，批量返回数量。固定结果随存档保存。
-
-返回：`number`；单次值／批量数量；失败-1，配合成功状态。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `mode` | enum；默认`"fresh"` | 模式；必填；选项 `fresh` 每次重抽、`sticky` 首次抽取后固定（随存档） |
-| `min` | number；默认`0` | 最小值；必填 |
-| `max` | number；默认`100` | 最大值；必填 |
-| `digits` | number；默认`0` | 小数位数（0=整数）；最小0；最大6 |
-| `includeMin` | boolean；默认`true` | 包含最小端点 |
-| `includeMax` | boolean；默认`true` | 包含最大端点 |
-| `count` | number；默认`1` | 数量（大于1批量输出）；最小1；最大100 |
-| `outVar` | variable；未声明默认值 | 单次结果变量；显示条件`{"field": "count", "equals": 1}` |
-| `prefix` | string；默认`""` | 批量前缀（数量大于1时使用） |
-| `reportVar` | variable；未声明默认值 | 完整结果数组（JSON文本，可空） |
-| `fixedKey` | string；默认`""` | 固定记录名（空=结果变量或批量前缀）；显示条件`{"field": "mode", "equals": "sticky"}` |
-| `fixedPolicy` | enum；默认`"fresh"` | 旧存档首次接入；选项 `fresh` 首次生成，忽略输出默认值、`adopt` 采用完整的既有结果；显示条件`{"field": "mode", "equals": "sticky"}` |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 重置固定随机 `reset-fixed`
-
-移除指定固定记录，下次重抽；保留结果变量。
-
-返回：`boolean`；是否成功。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `key` | string；默认`""` | 记录名（默认单次 value:变量名；批量 batch:前缀）；必填 |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 列表随机（安科式） `rand-pick`
-
-支持1～100次文字抽取。允许重复时每抽保持原概率；同批不重复按剩余行的原概率重新归一化。weight 填10%预留概率。
-
-返回：`string`；单条文字／批量JSON数组；失败空串，配合成功状态。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `poolScope` | enum；默认`"named"` | 候选范围；选项 `named` 指定池（空名称兼容全表）、`default` 仅未命名池、`all` 全部池 |
-| `pool` | string；默认`""` | 池名；显示条件`{"field": "poolScope", "equals": "named"}` |
-| `field` | string；默认`"label"` | 输出列 |
-| `emptyPolicy` | enum；默认`"error"` | 剩余概率无正权重时；选项 `error` 不抽取并报告错误、`uniform` 明确允许均匀回退 |
-| `count` | number；默认`1` | 抽取数量；最小1；最大100 |
-| `replacement` | enum；默认`"with"` | 重复规则；选项 `with` 允许重复（每次概率不变）、`without` 同批不重复（按行排除，后续概率改变） |
-| `outVar` | variable；未声明默认值 | 结果变量（单条文字／批量JSON文本，可空） |
-| `outIdVar` | variable；未声明默认值 | 行ID变量（单条ID／批量JSON文本，可空） |
-| `prefix` | string；默认`""` | 批量逐条输出前缀（可空，写入 前缀_1..N 文本变量） |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 列表随机（数值／公式） `rand-pick-number`
-
-按权重抽取数字或公式结果，支持整数与小数。批量结果写入前缀数值变量；可选重复规则。
-
-返回：`number`；单次数值／批量数量；失败-1，配合成功状态。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `poolScope` | enum；默认`"named"` | 候选范围；选项 `named` 指定池（空名称兼容全表）、`default` 仅未命名池、`all` 全部池 |
-| `pool` | string；默认`""` | 池名；显示条件`{"field": "poolScope", "equals": "named"}` |
-| `field` | string；默认`"label"` | 输出列 |
-| `emptyPolicy` | enum；默认`"error"` | 剩余概率无正权重时；选项 `error` 不抽取并报告错误、`uniform` 明确允许均匀回退 |
-| `count` | number；默认`1` | 抽取数量；最小1；最大100 |
-| `replacement` | enum；默认`"with"` | 重复规则；选项 `with` 允许重复（每次概率不变）、`without` 同批不重复（按行排除，后续概率改变） |
-| `outVar` | variable；未声明默认值 | 单次数值结果变量；显示条件`{"field": "count", "equals": 1}` |
-| `prefix` | string；默认`""` | 批量数值前缀（数量大于1时必填） |
-| `reportVar` | variable；未声明默认值 | 完整数值数组（JSON文本，可空） |
-| `outIdVar` | variable；未声明默认值 | 行ID变量（单条ID／批量JSON文本，可空） |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 检查候选池与概率 `preview-pool`
-
-检查固定概率与当前动态权重的分配，不抽取；返回JSON文本报告。
-
-返回：`string`；概率报告JSON。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `poolScope` | enum；默认`"named"` | 候选范围；选项 `named` 指定池（空名称兼容全表）、`default` 仅未命名池、`all` 全部池 |
-| `pool` | string；默认`""` | 池名；显示条件`{"field": "poolScope", "equals": "named"}` |
-| `field` | string；默认`"label"` | 输出列 |
-| `emptyPolicy` | enum；默认`"error"` | 剩余概率无正权重时；选项 `error` 不抽取并报告错误、`uniform` 明确允许均匀回退 |
-| `outVar` | variable；未声明默认值 | 报告变量（文本，可空） |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-### 计算 `calc`
-
-有限数值计算／无副作用的表函数。失败保留结果，成功状态=false。
-
-返回：`number`；计算结果；失败-1，配合成功状态。
-
-| 参数 | 类型／默认值 | 用途与条件 |
-|---|---|---|
-| `op` | enum；默认`"add"` | 运算；必填；选项 `add` 加 +、`sub` 减 −、`mul` 乘 ×、`div` 除 ÷、`pow` 幂、`root` 开方、`floor` 向下取整、`round` 四舍五入、`func` 自定义函数 |
-| `a` | number；默认`0` | a（基础运算） |
-| `b` | number；默认`1` | b（双目运算） |
-| `funcName` | string；默认`""` | 函数名；显示条件`{"field": "op", "equals": "func"}` |
-| `x` | number；默认`0` | x；显示条件`{"field": "op", "equals": "func"}` |
-| `y` | number；默认`0` | y；显示条件`{"field": "op", "equals": "func"}` |
-| `z` | number；默认`0` | z；显示条件`{"field": "op", "equals": "func"}` |
-| `w` | number；默认`0` | w；显示条件`{"field": "op", "equals": "func"}` |
-| `outVar` | variable；未声明默认值 | 结果变量（可空，仅返回） |
-| `successVar` | variable；未声明默认值 | 成功状态写入（布尔，可空） |
-| `errorVar` | variable；未声明默认值 | 错误说明写入（文本，可空） |
-
-
-## 检查器文字候选的边界
-
-string 参数的 suggestions 只声明编辑期历史候选：池名 pool、输出列 candidate-field、抽取池名称 deck-key、固定记录 fixed-key、数值前缀 number-output-prefix、文字前缀 text-output-prefix、抽取池前缀 deck-output-prefix、函数 function。同 key 在插件内复用，不能跨不同语义混用。实际候选由 Studio 从项目剧本已填值收集，不是数据库或存档实时枚举；变量仍用官方选择器。所用 SDK 没有本插件采用的自定义筛选或拼音匹配入口。历史 Studio 2.2.0-beta.1 中文首字动态过滤已观察通过，人工已确认候选显示后鼠标点选不能回填。2.3.0-beta.1 本轮未复测，不能宣称回填已修复。
-
-2026-09-26 真实宿主专项核查：官方示例式独立诊断扩展在原合成工程和仅启用必要组件的干净工程均各连续复现 3 次；另有 3 次鼠标失败逐次核对了磁盘旧值。直接定义、复用字段、默认值、必填、条件显示、检查器停靠位置、条件参数弹窗、新卡片和项目重开均未消除问题。对用户统一表述为“疑似 Studio 官方 Bug，等待官方修复”。独立复现证据指向扩展 string.suggestions 鼠标选择路径，尚未定位宿主内部代码原因，不能写成已确认某个焦点事件或插件已修复。
-
-展开候选后用 ↑／↓ 选择高亮项并按 Enter，或完整手填；键盘回填、保存、切卡和项目重开已核对，诊断方法在编辑器预览收到的字符串也与保存值一致。该结果不是全部 19 字段逐项 GUI 验收，也不是独立游戏运行／导出验收。Esc 关闭候选但不撤销输入；不要用直接写 JSON 或设置控件值冒充鼠标通过。
-
-当前公开方法 schema 未提供替换其选择处理的接口，不能以动态检查器或固定枚举接管任意文本。全拼和拼音首字母不在本版范围。运行时方法、参数类型与取值不变；旧存档和手填名称继续有效。
-
-资料依据：[插件公开源码](https://github.com/recurse00-stack/random-math)、随包实际方法定义与原 SDK、[官方更新记录](https://avg-engine.com/changelog)、[官方扩展开发入口](https://docs.avg-engine.com/extensions/develop/)。本轮 SDK 静态比较、路由与运行验收边界见 `VALIDATION-2.2.3.md`；引用网址不代表目标版本实机通过。
+|字段|填写含义|类型|默认|选项|显示条件|
+|---|---|---|---|---|---|
+|action|执行什么|enum|"generate"|single-fresh：单个随机数 · 每次重抽；batch-fresh：批量随机数 · 每次重抽；single-fixed：单个随机数 · 首次抽取后固定；batch-fixed：批量随机数 · 首次抽取后固定；generate：完整参数（兼容既有调用）；reset：清除指定固定记录|始终|
+|mode|模式|enum，必填|"fresh"|fresh：每次重抽；sticky：首次抽取后固定（随存档）|action = "generate"|
+|min|最小值|number，必填|0||action = "generate"|
+|max|最大值|number，必填|100||action = "generate"|
+|digits|小数位数（0=整数）|number|0||action = "generate"|
+|includeMin|包含最小端点|boolean|true||action = "generate"|
+|includeMax|包含最大端点|boolean|true||action = "generate"|
+|count|数量（大于1批量输出）|number|1||action = "generate"|
+|outVar|单次结果变量|variable|—||action = "generate"|
+|prefix|批量前缀（数量大于1时使用）|string|""||action = "generate"|
+|reportVar|完整结果数组（JSON文本，可空）|variable|—||action = "generate"|
+|fixedKey|固定记录名（空=结果变量或批量前缀）|string|""||action = "generate"|
+|fixedPolicy|旧存档首次接入|enum|"fresh"|fresh：首次生成，忽略输出默认值；adopt：采用完整的既有结果|action = "generate"|
+|successVar|成功状态写入（布尔，可空）|variable|—||始终|
+|errorVar|错误说明写入（文本，可空）|variable|—||始终|
+|single-fresh__min|最小值|number，必填|0||action = "single-fresh"|
+|single-fresh__max|最大值|number，必填|100||action = "single-fresh"|
+|single-fresh__digits|小数位数（0=整数）|number|0||action = "single-fresh"|
+|single-fresh__includeMin|包含最小端点|boolean|true||action = "single-fresh"|
+|single-fresh__includeMax|包含最大端点|boolean|true||action = "single-fresh"|
+|single-fresh__outVar|单次结果变量|variable|—||action = "single-fresh"|
+|single-fresh__reportVar|完整结果数组（JSON文本，可空）|variable|—||action = "single-fresh"|
+|batch-fresh__min|最小值|number，必填|0||action = "batch-fresh"|
+|batch-fresh__max|最大值|number，必填|100||action = "batch-fresh"|
+|batch-fresh__digits|小数位数（0=整数）|number|0||action = "batch-fresh"|
+|batch-fresh__includeMin|包含最小端点|boolean|true||action = "batch-fresh"|
+|batch-fresh__includeMax|包含最大端点|boolean|true||action = "batch-fresh"|
+|batch-fresh__count|批量数量|number|2||action = "batch-fresh"|
+|batch-fresh__prefix|批量前缀（数量大于1时使用）|string|""||action = "batch-fresh"|
+|batch-fresh__reportVar|完整结果数组（JSON文本，可空）|variable|—||action = "batch-fresh"|
+|single-fixed__min|最小值|number，必填|0||action = "single-fixed"|
+|single-fixed__max|最大值|number，必填|100||action = "single-fixed"|
+|single-fixed__digits|小数位数（0=整数）|number|0||action = "single-fixed"|
+|single-fixed__includeMin|包含最小端点|boolean|true||action = "single-fixed"|
+|single-fixed__includeMax|包含最大端点|boolean|true||action = "single-fixed"|
+|single-fixed__outVar|单次结果变量|variable|—||action = "single-fixed"|
+|single-fixed__reportVar|完整结果数组（JSON文本，可空）|variable|—||action = "single-fixed"|
+|single-fixed__fixedKey|固定记录名（空=结果变量或批量前缀）|string|""||action = "single-fixed"|
+|single-fixed__fixedPolicy|旧存档首次接入|enum|"fresh"|fresh：首次生成，忽略输出默认值；adopt：采用完整的既有结果|action = "single-fixed"|
+|batch-fixed__min|最小值|number，必填|0||action = "batch-fixed"|
+|batch-fixed__max|最大值|number，必填|100||action = "batch-fixed"|
+|batch-fixed__digits|小数位数（0=整数）|number|0||action = "batch-fixed"|
+|batch-fixed__includeMin|包含最小端点|boolean|true||action = "batch-fixed"|
+|batch-fixed__includeMax|包含最大端点|boolean|true||action = "batch-fixed"|
+|batch-fixed__count|批量数量|number|2||action = "batch-fixed"|
+|batch-fixed__prefix|批量前缀（数量大于1时使用）|string|""||action = "batch-fixed"|
+|batch-fixed__reportVar|完整结果数组（JSON文本，可空）|variable|—||action = "batch-fixed"|
+|batch-fixed__fixedKey|固定记录名（空=结果变量或批量前缀）|string|""||action = "batch-fixed"|
+|batch-fixed__fixedPolicy|旧存档首次接入|enum|"fresh"|fresh：首次生成，忽略输出默认值；adopt：采用完整的既有结果|action = "batch-fixed"|
+|resetKey|要清除的固定记录名|string|""||action = "reset"|
+
+### 放回抽取：draw-replace
+
+从指定放回池抽取，候选不会因抽取而减少。
+
+返回：剧情动作；通过变量输出，不作为If条件候选。
+
+|字段|填写含义|类型|默认|选项|显示条件|
+|---|---|---|---|---|---|
+|poolId|目标池ID（见扩展设置的池目录）|string，必填|—||始终|
+|count|抽取数量|number|1||始终|
+|outVar|单项结果（与池结果类型一致，可空）|variable|—||始终|
+|idVar|单项候选ID（文本，可空）|variable|—||始终|
+|valuesVar|结果数组JSON（文本，可空）|variable|—||始终|
+|idsVar|候选ID数组JSON（文本，可空）|variable|—||始终|
+|prefix|逐项输出前缀（可空，预先声明 前缀_1…N）|string|""||始终|
+|showAdvancedFeedback|高级设置：执行反馈（可选）|boolean|false||始终|
+|reportVar|完整报告（文本，可空）|variable|—||showAdvancedFeedback = true|
+|statusVar|结果状态 ok/skipped/empty/error（文本，可空）|variable|—||showAdvancedFeedback = true|
+|successVar|成功状态（布尔，可空）|variable|—||showAdvancedFeedback = true|
+|errorVar|错误说明（文本，可空）|variable|—||showAdvancedFeedback = true|
+
+### 不放回抽取：draw-without
+
+抽取并消耗或占用份数；也可确认消耗、取消占用。
+
+返回：剧情动作；通过变量输出，不作为If条件候选。
+
+|字段|填写含义|类型|默认|选项|显示条件|
+|---|---|---|---|---|---|
+|action|执行什么|enum|"draw"|draw：从池中抽取；batch：仅本次批量不放回（JSON数组）；confirm：确认消耗；cancel：取消占用|始终|
+|draw__poolId|目标池ID（见扩展设置的池目录）|string，必填|—||action = "draw"|
+|draw__count|抽取数量|number|1||action = "draw"|
+|draw__outVar|单项结果（与池结果类型一致，可空）|variable|—||action = "draw"|
+|draw__idVar|单项候选ID（文本，可空）|variable|—||action = "draw"|
+|draw__valuesVar|结果数组JSON（文本，可空）|variable|—||action = "draw"|
+|draw__idsVar|候选ID数组JSON（文本，可空）|variable|—||action = "draw"|
+|draw__prefix|逐项输出前缀（可空，预先声明 前缀_1…N）|string|""||action = "draw"|
+|draw__receiptVar|占用凭证（文本，延后消耗时填写）|variable|—||action = "draw"|
+|draw__remainingVar|剩余份数（数值，可空）|variable|—||action = "draw"|
+|draw__availableVar|可用份数（数值，可空）|variable|—||action = "draw"|
+|draw__consumption|消耗时机|enum|"immediate"|immediate：立即消耗；deferred：先占用，完成后确认|action = "draw"|
+|batch__poolId|本次操作名称|string，必填|—||action = "batch"|
+|batch__arrayJson|JSON数组|string|"[]"||action = "batch"|
+|batch__valueType|结果类型|enum|"text"|text：文字；number：数值或公式|action = "batch"|
+|batch__count|抽取数量|number|1||action = "batch"|
+|batch__outVar|单项结果（与池结果类型一致，可空）|variable|—||action = "batch"|
+|batch__idVar|单项候选ID（文本，可空）|variable|—||action = "batch"|
+|batch__valuesVar|结果数组JSON（文本，可空）|variable|—||action = "batch"|
+|batch__idsVar|候选ID数组JSON（文本，可空）|variable|—||action = "batch"|
+|batch__prefix|逐项输出前缀（可空，预先声明 前缀_1…N）|string|""||action = "batch"|
+|batch__remainingVar|剩余份数（数值，可空）|variable|—||action = "batch"|
+|batch__availableVar|可用份数（数值，可空）|variable|—||action = "batch"|
+|confirm__receiptId|抽取凭证|string|""||action = "confirm"|
+|confirm__outVar|单项结果（与池结果类型一致，可空）|variable|—||action = "confirm"|
+|confirm__idVar|单项候选ID（文本，可空）|variable|—||action = "confirm"|
+|confirm__valuesVar|结果数组JSON（文本，可空）|variable|—||action = "confirm"|
+|confirm__idsVar|候选ID数组JSON（文本，可空）|variable|—||action = "confirm"|
+|confirm__prefix|逐项输出前缀（可空，预先声明 前缀_1…N）|string|""||action = "confirm"|
+|confirm__receiptVar|占用凭证（文本，延后消耗时填写）|variable|—||action = "confirm"|
+|confirm__remainingVar|剩余份数（数值，可空）|variable|—||action = "confirm"|
+|confirm__availableVar|可用份数（数值，可空）|variable|—||action = "confirm"|
+|cancel__receiptId|抽取凭证|string|""||action = "cancel"|
+|cancel__outVar|单项结果（与池结果类型一致，可空）|variable|—||action = "cancel"|
+|cancel__idVar|单项候选ID（文本，可空）|variable|—||action = "cancel"|
+|cancel__valuesVar|结果数组JSON（文本，可空）|variable|—||action = "cancel"|
+|cancel__idsVar|候选ID数组JSON（文本，可空）|variable|—||action = "cancel"|
+|cancel__prefix|逐项输出前缀（可空，预先声明 前缀_1…N）|string|""||action = "cancel"|
+|cancel__receiptVar|占用凭证（文本，延后消耗时填写）|variable|—||action = "cancel"|
+|cancel__remainingVar|剩余份数（数值，可空）|variable|—||action = "cancel"|
+|cancel__availableVar|可用份数（数值，可空）|variable|—||action = "cancel"|
+|showAdvancedFeedback|高级设置：执行反馈（可选）|boolean|false||始终|
+|reportVar|完整报告（文本，可空）|variable|—||showAdvancedFeedback = true|
+|statusVar|结果状态 ok/skipped/empty/error（文本，可空）|variable|—||showAdvancedFeedback = true|
+|successVar|成功状态（布尔，可空）|variable|—||showAdvancedFeedback = true|
+|errorVar|错误说明（文本，可空）|variable|—||showAdvancedFeedback = true|
+
+### 调整抽取池：pool-update
+
+剧情运行时调整指定池，或读取状态。批量调整全部成功后才提交。
+
+返回：剧情动作；通过变量输出，不作为If条件候选。
+
+|字段|填写含义|类型|默认|选项|显示条件|
+|---|---|---|---|---|---|
+|action|执行什么|enum|"inspect"|initialize：从配置初始化池（已存在时保留）；import-array：从JSON数组初始化（已存在时保留）；import-table：从旧候选表初始化快照（已存在时保留）；reset：重置为当前创作配置；delete：删除池；add：新增候选；remove：移除候选；enable：启用候选；disable：停用候选；set-rate：设置权重；add-rate：增减权重；set-percent：设置基础百分比（其他候选按比例分配）；set-quantity：设置剩余份数；add-quantity：增减剩余份数；set-condition：修改参与条件；set-content：修改显示和结果内容；batch-adjust：执行一组批量调整；inspect：读取状态和概率报告|始终|
+|poolId|目标池ID（见扩展设置的池目录）|string，必填|—||始终|
+|when|仅当此布尔变量为真时执行（可空）|variable|—||始终|
+|import-array__arrayJson|JSON数组|string|"[]"||action = "import-array"|
+|import-array__kind|导入池类型|enum|"without"|with：放回；without：不放回|action = "import-array"|
+|import-array__valueType|导入结果类型|enum|"text"|text：文字；number：数值或公式|action = "import-array"|
+|import-array__random|导入随机策略|enum|"fixed"|fixed：同一进度固定；fresh：允许读档重抽|action = "import-array"|
+|import-table__tablePool|旧表池名|string|""||action = "import-table"|
+|import-table__field|结果列|string|"label"||action = "import-table"|
+|import-table__kind|导入池类型|enum|"without"|with：放回；without：不放回|action = "import-table"|
+|import-table__valueType|导入结果类型|enum|"text"|text：文字；number：数值或公式|action = "import-table"|
+|import-table__random|导入随机策略|enum|"fixed"|fixed：同一进度固定；fresh：允许读档重抽|action = "import-table"|
+|add__candidateId|目标候选ID|string|""||action = "add"|
+|add__label|显示文字|string|""||action = "add"|
+|add__value|结果内容（数值池可填公式）|string|""||action = "add"|
+|add__rate|权重／基础百分比（可填 var("好感度")）|string|"1"||action = "add"|
+|add__quantity|初始份数（不放回池）|number|1||action = "add"|
+|add__condition|参与条件的布尔变量名（空=始终）|string|""||action = "add"|
+|add__data|附加JSON数据（可空）|string|""||action = "add"|
+|remove__candidateId|目标候选ID|string|""||action = "remove"|
+|enable__candidateId|目标候选ID|string|""||action = "enable"|
+|disable__candidateId|目标候选ID|string|""||action = "disable"|
+|set-rate__candidateId|目标候选ID|string|""||action = "set-rate"|
+|set-rate__amount|数值／变量表达式（如 var("好感度")）|string|"0"||action = "set-rate"|
+|add-rate__candidateId|目标候选ID|string|""||action = "add-rate"|
+|add-rate__amount|数值／变量表达式（如 var("好感度")）|string|"0"||action = "add-rate"|
+|set-percent__candidateId|目标候选ID|string|""||action = "set-percent"|
+|set-percent__amount|数值／变量表达式（如 var("好感度")）|string|"0"||action = "set-percent"|
+|set-quantity__candidateId|目标候选ID|string|""||action = "set-quantity"|
+|set-quantity__amount|数值／变量表达式（如 var("好感度")）|string|"0"||action = "set-quantity"|
+|add-quantity__candidateId|目标候选ID|string|""||action = "add-quantity"|
+|add-quantity__amount|数值／变量表达式（如 var("好感度")）|string|"0"||action = "add-quantity"|
+|set-condition__candidateId|目标候选ID|string|""||action = "set-condition"|
+|set-condition__condition|布尔变量名（空=始终）|string|""||action = "set-condition"|
+|set-content__candidateId|目标候选ID|string|""||action = "set-content"|
+|set-content__label|显示文字|string|""||action = "set-content"|
+|set-content__value|结果内容|string|""||action = "set-content"|
+|batch-adjust__batchId|批量调整组ID|string|""||action = "batch-adjust"|
+|inspect__remainingVar|剩余份数（数值，可空）|variable|—||action = "inspect"|
+|inspect__availableVar|可用份数（数值，可空）|variable|—||action = "inspect"|
+|showAdvancedFeedback|高级设置：执行反馈（可选）|boolean|false||始终|
+|reportVar|完整报告（文本，可空）|variable|—||showAdvancedFeedback = true|
+|statusVar|结果状态 ok/skipped/empty/error（文本，可空）|variable|—||showAdvancedFeedback = true|
+|successVar|成功状态（布尔，可空）|variable|—||showAdvancedFeedback = true|
+|errorVar|错误说明（文本，可空）|variable|—||showAdvancedFeedback = true|
+
+### 玩家选项：player-choice
+
+展示合格候选，等待玩家选择；输出结果接续后面的剧情。
+
+返回：剧情动作；通过变量输出，不作为If条件候选。
+
+|字段|填写含义|类型|默认|选项|显示条件|
+|---|---|---|---|---|---|
+|poolId|目标池ID（见扩展设置的池目录）|string，必填|—||始终|
+|requestKey|选项请求名（空=池ID；同池多个待选点请分别命名）|string|""||始终|
+|consumption|消耗时机|enum|"immediate"|immediate：立即消耗；deferred：先占用，完成后确认|始终|
+|outVar|单项结果（与池结果类型一致，可空）|variable|—||始终|
+|idVar|单项候选ID（文本，可空）|variable|—||始终|
+|valuesVar|结果数组JSON（文本，可空）|variable|—||始终|
+|idsVar|候选ID数组JSON（文本，可空）|variable|—||始终|
+|prefix|逐项输出前缀（可空，预先声明 前缀_1…N）|string|""||始终|
+|receiptVar|占用凭证（文本，延后消耗时填写）|variable|—||始终|
+|remainingVar|剩余份数（数值，可空）|variable|—||始终|
+|availableVar|可用份数（数值，可空）|variable|—||始终|
+|showAdvancedFeedback|高级设置：执行反馈（可选）|boolean|false||始终|
+|reportVar|完整报告（文本，可空）|variable|—||showAdvancedFeedback = true|
+|statusVar|结果状态 ok/skipped/empty/error（文本，可空）|variable|—||showAdvancedFeedback = true|
+|successVar|成功状态（布尔，可空）|variable|—||showAdvancedFeedback = true|
+|errorVar|错误说明（文本，可空）|variable|—||showAdvancedFeedback = true|
+
+### 计算：calc
+
+基础运算、直接公式、取整精度、余数及范围限制。输入支持数值变量；失败保留结果。
+
+返回：number，计算结果；失败-1，配合成功状态。
+
+|字段|填写含义|类型|默认|选项|显示条件|
+|---|---|---|---|---|---|
+|op|运算|enum，必填|"add"|add：加 +；sub：减 −；mul：乘 ×；div：除 ÷；pow：幂；root：开方；floor：向下取整；round：四舍五入；func：自定义函数；expr：直接公式；ceil：向上取整；trunc：去掉小数（向零取整）；round-digits：四舍五入到指定小数位；abs：绝对值；remainder：求余数（保留被除数符号）；mod：循环取模（非负结果）；min：取较小值；max：取较大值；clamp：限制在指定范围|始终|
+|a|a（基础运算）|number|0||op = "add"|
+|b|b（双目运算）|number|1||op = "add"|
+|funcName|函数名|string|""||op = "func"|
+|x|x|number|0||op = "func"|
+|y|y|number|0||op = "func"|
+|z|z|number|0||op = "func"|
+|w|w|number|0||op = "func"|
+|outVar|结果变量（可空，仅返回）|variable|—||始终|
+|successVar|成功状态写入（布尔，可空）|variable|—||始终|
+|errorVar|错误说明写入（文本，可空）|variable|—||始终|
+|subA|a|number|—||op = "sub"|
+|subB|b|number|—||op = "sub"|
+|mulA|a|number|—||op = "mul"|
+|mulB|b|number|—||op = "mul"|
+|divA|a|number|—||op = "div"|
+|divB|b|number|—||op = "div"|
+|powA|a|number|—||op = "pow"|
+|powB|b|number|—||op = "pow"|
+|rootA|a|number|—||op = "root"|
+|floorA|a|number|—||op = "floor"|
+|roundA|a|number|—||op = "round"|
+|expr__expression|公式（如 var("攻击") * 0.8 + 10）|string，必填|"0"||op = "expr"|
+|ceil__value|数值／变量公式|string，必填|"0"||op = "ceil"|
+|trunc__value|数值／变量公式|string，必填|"0"||op = "trunc"|
+|abs__value|数值／变量公式|string，必填|"0"||op = "abs"|
+|round-digits__value|数值／变量公式|string，必填|"0"||op = "round-digits"|
+|clamp__value|数值／变量公式|string，必填|"0"||op = "clamp"|
+|round-digits__digits|保留小数位数（0～6，可填变量公式）|string，必填|"2"||op = "round-digits"|
+|remainder__a|被除数／变量公式|string，必填|"0"||op = "remainder"|
+|remainder__b|非零除数／变量公式|string，必填|"1"||op = "remainder"|
+|mod__a|被除数／变量公式|string，必填|"0"||op = "mod"|
+|mod__b|正模数／变量公式|string，必填|"1"||op = "mod"|
+|min__a|第一个数／变量公式|string，必填|"0"||op = "min"|
+|min__b|第二个数／变量公式|string，必填|"1"||op = "min"|
+|max__a|第一个数／变量公式|string，必填|"0"||op = "max"|
+|max__b|第二个数／变量公式|string，必填|"1"||op = "max"|
+|clamp__min|下限／变量公式|string，必填|"0"||op = "clamp"|
+|clamp__max|上限／变量公式|string，必填|"100"||op = "clamp"|
+<!-- PARAMETERS-END -->
+
+## 9. 交付与证据
+
+分别报告代码、自动化、真实Beta、真实Stable、候选完整性、外部发布；主体、AI Skill＋辅助安装、人类手册分别标注changed/verified-unchanged/missing。路由不是双宿主实测，安装不等于模型读取。当前验收以VALIDATION-3.0为准。SL从对应章节读档后直接推进；切换章节或运行检查器引发的预览重建不能当作同一存档状态。
+
+来源：随包真实方法、原SDK、官方method/settings-schema/system-slots及目标工程样本。
+
+## rc.4 接续修复
+
+关闭后的Choice回调不再有效；重新展示同名请求有独立requestId，旧存档缺少该字段仍可恢复。新旧混用时旧单次取出继续忽略批量前缀。已有占用时重复初始化保留原池，重置／删除仍拒绝。检查面板指出候选引用不存在的池。configVersion是初始化定义指纹，configSource是来源；旧存档缺失时UNKNOWN，不由当前作者配置补造。sdkVersion声明最低要求>=1.21.0；当前编译SDK为2.4.0-beta.2，实际最低宿主未核定，Stable仍未验。

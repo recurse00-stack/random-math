@@ -8,7 +8,7 @@
  * 不直接 import package.json:SDK 会被扩展打包引用,不该把整个
  * package.json 拖进 bundle。
  */
-export const SDK_VERSION = "1.21.0";
+export const SDK_VERSION = "2.4.0-beta.2";
 
 export const EXTENSION_MANIFEST_FILE = "extension.json";
 

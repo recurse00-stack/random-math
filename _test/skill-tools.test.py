@@ -41,7 +41,7 @@ class SkillToolTests(unittest.TestCase):
         self.skills = self.home / ".codex/skills"
         self.create_source()
         self.bundle.joinpath("extension.json").write_text(json.dumps({
-            "id": "mixing-entropy.random-math", "version": "2.2.3"}), encoding="utf-8")
+            "id": "mixing-entropy.random-math", "version": "3.0.0-rc.2"}), encoding="utf-8")
         self.bundle.joinpath("plugin-skill-manifest.json").write_bytes(installer.manifest_bytes(self.source, self.bundle))
         self.sdk = self.root / "sdk"
         self.sdk.mkdir()
@@ -54,7 +54,7 @@ class SkillToolTests(unittest.TestCase):
             target.write_text("Fixture for " + name + "\n", encoding="utf-8")
         self.source.joinpath("SKILL.md").write_text(
             '---\nname: letsgal-plugin-random-math\ndescription: test fixture\nmetadata:\n'
-            '  plugin_id: mixing-entropy.random-math\n  plugin_version: "2.2.3"\n---\nSynthetic plugin docs.\n',
+            '  plugin_id: mixing-entropy.random-math\n  plugin_version: "3.0.0-rc.2"\n---\nSynthetic plugin docs.\n',
             encoding="utf-8")
 
     def create_main(self, root=None):
@@ -156,7 +156,7 @@ class SkillToolTests(unittest.TestCase):
     def test_standalone_upgrade_refuses_to_replace_previous_version(self):
         first = self.install(apply=True)
         previous = installer.file_hashes(Path(first["target"]))
-        body = self.source.joinpath("SKILL.md").read_text(encoding="utf-8").replace('"2.2.3"', '"2.2.4"')
+        body = self.source.joinpath("SKILL.md").read_text(encoding="utf-8").replace('"3.0.0-rc.2"', '"2.2.4"')
         self.source.joinpath("SKILL.md").write_text(body, encoding="utf-8")
         self.bundle.joinpath("extension.json").write_text(json.dumps({"id": "mixing-entropy.random-math", "version": "2.2.4"}), encoding="utf-8")
         self.bundle.joinpath("plugin-skill-manifest.json").write_bytes(installer.manifest_bytes(self.source, self.bundle))
@@ -174,7 +174,7 @@ class SkillToolTests(unittest.TestCase):
         self.bundle.joinpath("extension.json").write_text('{"id":"mixing-entropy.random-math","version":"2.2.2"}', encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "identity/version differ"):
             self.install()
-        self.bundle.joinpath("extension.json").write_text('{"id":"mixing-entropy.random-math","version":"2.2.3"}', encoding="utf-8")
+        self.bundle.joinpath("extension.json").write_text('{"id":"mixing-entropy.random-math","version":"3.0.0-rc.2"}', encoding="utf-8")
         manifest = installer.manifest_bytes(self.source, self.bundle)
         self.bundle.joinpath("plugin-skill-manifest.json").write_bytes(manifest)
         self.assertEqual(self.install()["status"], "PREVIEW")
@@ -190,7 +190,7 @@ class SkillToolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "traversal"):
             self.install(user_root=self.home / ".." / "escape", apply=True)
         body = self.source.joinpath("SKILL.md").read_text(encoding="utf-8")
-        self.source.joinpath("SKILL.md").write_text(body.replace('  plugin_version: "2.2.3"', '  plugin_version: "2.2.3"\n  version: "2.2.2"'), encoding="utf-8")
+        self.source.joinpath("SKILL.md").write_text(body.replace('  plugin_version: "3.0.0-rc.2"', '  plugin_version: "3.0.0-rc.2"\n  version: "2.2.2"'), encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "Conflicting"):
             self.install()
 
@@ -215,7 +215,7 @@ class SkillToolTests(unittest.TestCase):
         override.joinpath("references/AI-GUIDE.md").write_bytes(b"different same-version content")
         with self.assertRaisesRegex(ValueError, "checksums"):
             self.install(source=override, apply=True)
-        text = override.joinpath("SKILL.md").read_text(encoding="utf-8").replace('"2.2.3"', '"2.2.4"')
+        text = override.joinpath("SKILL.md").read_text(encoding="utf-8").replace('"3.0.0-rc.2"', '"2.2.4"')
         override.joinpath("SKILL.md").write_text(text, encoding="utf-8")
         with self.assertRaisesRegex(ValueError, "identity/version differ"):
             self.install(source=override, apply=True)
@@ -242,7 +242,7 @@ class SkillToolTests(unittest.TestCase):
         self.create_main()
         index = self.home / ".letsgal-authoring/plugins/INDEX.md"
         index.parent.mkdir(parents=True)
-        prior = b"| mixing-entropy.random-math | 2.2.3 | [wrong](somewhere/else.md) | user |\n"
+        prior = b"| mixing-entropy.random-math | 3.0.0-rc.2 | [wrong](somewhere/else.md) | user |\n"
         index.write_bytes(prior)
         with self.assertRaisesRegex(ValueError, "index entry conflicts"):
             self.install(apply=True)
@@ -362,7 +362,7 @@ class SkillToolTests(unittest.TestCase):
             archive.extractall(extracted)
         source = extracted / installer.SKILL_RELATIVE
         found, hashes = installer.checked_source(source, extracted)
-        self.assertEqual(found["version"], "2.2.3")
+        self.assertEqual(found["version"], "3.0.0-rc.2")
         self.assertEqual(hashes, installer.file_hashes(self.source))
 
     def test_routing_selects_only_target_channel_and_never_claims_runtime(self):

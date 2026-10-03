@@ -38,7 +38,7 @@ if (existsSync(path.join(dist, 'index.js'))) {
   // the entry rather than relying on relative imports from a blob/module URL.
   const entry = path.join(dist, 'index.js');
   buildSync({ entryPoints: [entry], outfile: entry, bundle: true, allowOverwrite: true,
-    platform: 'browser', format: 'esm', target: 'es2022', external: ['@avg-studio/sdk'],
+    platform: 'browser', format: 'esm', target: 'es2022', external: ['@avg-studio/sdk', 'react', 'react-dom', 'react/jsx-runtime'],
     charset: 'utf8', legalComments: 'none' });
   copyFileSync(path.join(dist, 'index.js'), path.join(dist, 'index.mjs'));
 }

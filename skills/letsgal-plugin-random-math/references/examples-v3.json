@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "pluginVersion": "3.0.0",
+  "format": "configuration and method parameter intentions; not chapter JSON",
+  "variables": {
+    "result": "string",
+    "candidate": "string",
+    "values": "string",
+    "receipt": "string",
+    "status": "string",
+    "ok": "boolean",
+    "error": "string",
+    "left": "number",
+    "archive_open": "boolean",
+    "event_completed": "boolean",
+    "攻击": "number",
+    "damage": "number",
+    "编号": "number",
+    "cycle": "number"
+  },
+  "settings": {
+    "pools": [
+      {
+        "id": "weather",
+        "name": "天气",
+        "kind": "with",
+        "valueType": "text",
+        "probability": "weight",
+        "random": "fresh"
+      },
+      {
+        "id": "bag",
+        "name": "奖袋",
+        "kind": "without",
+        "valueType": "text",
+        "probability": "weight",
+        "quantityWeight": "candidate",
+        "random": "fixed"
+      },
+      {
+        "id": "events",
+        "kind": "with",
+        "valueType": "text",
+        "probability": "weight",
+        "random": "fixed"
+      },
+      {
+        "id": "reward",
+        "kind": "with",
+        "valueType": "text",
+        "probability": "weight",
+        "random": "fresh"
+      }
+    ],
+    "candidates": [
+      {
+        "poolId": "weather",
+        "id": "sun",
+        "label": "晴朗",
+        "value": "晴天",
+        "rate": "6",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "weather",
+        "id": "rain",
+        "label": "下雨",
+        "value": "雨天",
+        "rate": "3",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "weather",
+        "id": "snow",
+        "label": "下雪",
+        "value": "雪天",
+        "rate": "1",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "bag",
+        "id": "a",
+        "label": "A",
+        "value": "A",
+        "rate": "1",
+        "quantity": 10,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "bag",
+        "id": "b",
+        "label": "B",
+        "value": "B",
+        "rate": "1",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "events",
+        "id": "a",
+        "label": "调查庭院",
+        "value": "yard",
+        "rate": "1",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "events",
+        "id": "b",
+        "label": "访问档案室",
+        "value": "archive",
+        "rate": "1",
+        "quantity": 1,
+        "enabled": true,
+        "condition": "archive_open"
+      },
+      {
+        "poolId": "events",
+        "id": "c",
+        "label": "休息",
+        "value": "rest",
+        "rate": "0",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "reward",
+        "id": "a",
+        "label": "A",
+        "value": "A",
+        "rate": "1",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "reward",
+        "id": "b",
+        "label": "B",
+        "value": "B",
+        "rate": "1",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      },
+      {
+        "poolId": "reward",
+        "id": "c",
+        "label": "C",
+        "value": "C",
+        "rate": "1",
+        "quantity": 1,
+        "enabled": true,
+        "condition": ""
+      }
+    ],
+    "adjustments": []
+  },
+  "calls": [
+    {
+      "method": "draw-replace",
+      "params": {
+        "poolId": "weather",
+        "count": 1,
+        "outVar": "result",
+        "idVar": "candidate",
+        "statusVar": "status",
+        "showAdvancedFeedback": true
+      }
+    },
+    {
+      "method": "draw-without",
+      "params": {
+        "action": "draw",
+        "draw__poolId": "bag",
+        "draw__count": 1,
+        "draw__consumption": "deferred",
+        "draw__receiptVar": "receipt",
+        "statusVar": "status",
+        "showAdvancedFeedback": true
+      }
+    },
+    {
+      "method": "player-choice",
+      "params": {
+        "poolId": "events",
+        "requestKey": "day1-events",
+        "outVar": "result",
+        "idVar": "candidate",
+        "statusVar": "status",
+        "showAdvancedFeedback": true
+      }
+    },
+    {
+      "method": "pool-update",
+      "params": {
+        "action": "add-rate",
+        "poolId": "reward",
+        "add-rate__candidateId": "a",
+        "add-rate__amount": "2",
+        "when": "event_completed",
+        "statusVar": "status",
+        "showAdvancedFeedback": true
+      }
+    },
+    {
+      "method": "calc",
+      "params": {
+        "op": "expr",
+        "expr__expression": "var(\"攻击\") * 0.8 + 10",
+        "outVar": "damage",
+        "successVar": "ok",
+        "errorVar": "error"
+      }
+    },
+    {
+      "method": "calc",
+      "params": {
+        "op": "expr",
+        "expr__expression": "mod(var(\"编号\") - 1, 4) + 1",
+        "outVar": "cycle",
+        "successVar": "ok",
+        "errorVar": "error"
+      }
+    }
+  ],
+  "documentationRevision": "sdk.1",
+  "notes": [
+    "这些对象是字段意图，不是可导入的章节节点。",
+    "打开高级执行反馈只是方便填写status等绑定，收起不会停用输出。",
+    "confirm__receiptId和动态候选ID应绑定变量值，按目标宿主真实格式序列化。",
+    "计算示例中攻击=20时damage=26；编号从1开始循环到1～4。",
+    "数值输入变量必须是有限数值，计算失败保留旧输出，先检查ok。"
+  ]
+}

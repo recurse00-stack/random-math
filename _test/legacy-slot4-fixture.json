@@ -1,0 +1,8 @@
+{
+  "source": "Studio 2.3.0-beta.1 runtime inspector after restoring synthetic 2.2 slot dated 2026-09-21; captured 2026-10-01",
+  "capture_sha256": "e0ff0c0da97f5d5ab28447d925202bebc54a806fd4663f79898fb46a39c08615",
+  "drawDecks": [
+    "{\"version\":1,\"key\":\"accept-fixed\",\"mode\":\"fixed\",\"valueType\":\"text\",\"total\":5,\"drawn\":1,\"items\":[{\"id\":\"array:2\",\"value\":\"B\",\"weight\":1},{\"id\":\"array:5\",\"value\":\"E\",\"weight\":1},{\"id\":\"array:4\",\"value\":\"D\",\"weight\":1},{\"id\":\"array:1\",\"value\":\"A\",\"weight\":1}]}",
+    "{\"version\":1,\"key\":\"accept-fresh\",\"mode\":\"remaining\",\"valueType\":\"text\",\"total\":5,\"drawn\":1,\"items\":[{\"id\":\"array:2\",\"value\":\"B\",\"weight\":1},{\"id\":\"array:3\",\"value\":\"C\",\"weight\":1},{\"id\":\"array:4\",\"value\":\"D\",\"weight\":1},{\"id\":\"array:5\",\"value\":\"E\",\"weight\":1}]}"
+  ]
+}

@@ -1,8 +1,8 @@
 /**
  * 扩展提供的项目调度策略。
  *
- * 与 method() 不同，调度策略不会出现在“调用扩展方法”块里，只能被项目级
- * 根调度节点选择。resolve 可以等待扩展 UI 的用户输入；Promise resolve 后再
+ * 与 method() 不同，调度策略不会出现在“调用扩展方法”块里，而由蓝图中的
+ * 扩展策略节点选择（兼容旧根调度）。resolve 可以等待扩展 UI 的用户输入；Promise resolve 后再
  * 返回章节决策，因此地图选择不需要把长任务或 Promise 写入存档。
  */
 
@@ -19,8 +19,9 @@ export interface ScheduleChapterMeta {
 }
 
 export interface ScheduleStrategyInput {
+  /** 蓝图节点为 root:flow:<nodeId>；旧项目迁移的根策略保留 root。 */
   schedulerId: string;
-  /** 只包含调度节点下方、未禁用的候选章节。 */
+  /** 当前节点明确允许调度的章节。返回的 chapterId 必须来自此列表。 */
   chapters: readonly ScheduleChapterMeta[];
   activeChapterId: string | null;
   lastCompletedChapterId: string | null;

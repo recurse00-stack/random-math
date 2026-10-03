@@ -6,8 +6,11 @@
  * 一个方法 = 一个静态 property(不再一类一方法):
  *
  * ```ts
- * class InventorySystem extends Extension {
- *   static addItem = method({
+ * const inventorySave = defineSave({
+ *   items: { type: "list", persistence: "slot", default: [] as string[] },
+ * });
+ * class InventorySystem extends Extension.withSave(inventorySave) {
+ *   static addItem = this.method({
  *     title: "增加物品",
  *     schema: {
  *       itemId: { type: "string", label: "物品 ID", required: true },
@@ -102,6 +105,7 @@ export interface ExtensionMethodDef<
   R extends ExtensionMethodReturns | undefined =
     | ExtensionMethodReturns
     | undefined,
+  Owner extends ExtensionBase<any, any> = ExtensionBase,
 > {
   /** 方法 picker 里显示的名字。 */
   title: string;
@@ -125,19 +129,19 @@ export interface ExtensionMethodDef<
    * params 已是最终值 —— 创作者填的变量引用,引擎在调用前已解好。
    */
   run(
-    this: ExtensionBase,
+    this: Owner,
     ctx: ExtensionContext,
     params: ParamsOf<S>,
   ): ExtensionMethodReturnValue<R> | Promise<ExtensionMethodReturnValue<R>>;
   /** 可选:立即生效版本(不等动画)。 */
   runImmediately?(
-    this: ExtensionBase,
+    this: Owner,
     ctx: ExtensionContext,
     params: ParamsOf<S>,
   ): ExtensionMethodReturnValue<R> | Promise<ExtensionMethodReturnValue<R>>;
   /** 可选:玩家快进时的简化行为。缺省 fallback 到 run。 */
   skip?(
-    this: ExtensionBase,
+    this: Owner,
     ctx: ExtensionContext,
     params: ParamsOf<S>,
   ): ExtensionMethodReturnValue<R> | Promise<ExtensionMethodReturnValue<R>>;
@@ -156,6 +160,34 @@ export function method<
   const R extends ExtensionMethodReturns | undefined = undefined,
 >(def: ExtensionMethodDef<S, R>): BrandedExtensionMethod<S, R> {
   return Object.assign(def, { [METHOD_BRAND]: true as const });
+}
+
+/**
+ * 为某个 Extension 实例类型创建 method() 的绑定版本。
+ *
+ * 普通全局 method() 无法知道它最终会挂到哪个类；Extension 上的静态绑定版本
+ * 从调用接收者（`this.method(...)` 中的 this）推导实际子类 constructor，再用
+ * InstanceType 得到完整实例类型。这样 save schema、自定义 Props、子类 helper 和
+ * protected context 都能在回调中保留。返回值仍擦除 Owner，宿主侧现有方法
+ * 收集/执行协议无需变化。
+ */
+type ExtensionMethodOwnerConstructor = abstract new (
+  ...args: any[]
+) => ExtensionBase<any, any>;
+
+export interface ExtensionMethodFactory {
+  <
+    OwnerConstructor extends ExtensionMethodOwnerConstructor,
+    const S extends BlockSchema | undefined = undefined,
+    const R extends ExtensionMethodReturns | undefined = undefined,
+  >(
+    this: OwnerConstructor,
+    def: ExtensionMethodDef<S, R, InstanceType<OwnerConstructor>>,
+  ): BrandedExtensionMethod<S, R>;
+}
+
+export function createExtensionMethodFactory(): ExtensionMethodFactory {
+  return method as ExtensionMethodFactory;
 }
 
 export function isExtensionMethod(

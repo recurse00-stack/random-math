@@ -15,7 +15,26 @@ def build(target):
         if canonical != reference:
             raise ValueError(f'Stale Skill reference {name}; run scripts/build-creator-docs.py first')
     files = {
+        'skills/letsgal-plugin-random-math/references/examples-v3.json': 'skills/letsgal-plugin-random-math/references/examples-v3.json',
+        'docs/images/v3-choice-rc5-beta242-longtext.png': 'docs/images/v3-choice-rc5-beta242-longtext.png',
+        'skills/letsgal-plugin-random-math/references/images/v3-choice-rc5-beta242-longtext.png': 'skills/letsgal-plugin-random-math/references/images/v3-choice-rc5-beta242-longtext.png',
+        'docs/images/PROVENANCE.md': 'docs/images/PROVENANCE.md',
+        'docs/images/v3-choice-rc2-custom-longtext.png': 'docs/images/v3-choice-rc2-custom-longtext.png',
+        'docs/images/v3-choice-rc2-official-branch.png': 'docs/images/v3-choice-rc2-official-branch.png',
+        'skills/letsgal-plugin-random-math/references/images/PROVENANCE.md': 'skills/letsgal-plugin-random-math/references/images/PROVENANCE.md',
+        'skills/letsgal-plugin-random-math/references/images/v3-choice-rc2-custom-longtext.png': 'skills/letsgal-plugin-random-math/references/images/v3-choice-rc2-custom-longtext.png',
+        'skills/letsgal-plugin-random-math/references/images/v3-choice-rc2-official-branch.png': 'skills/letsgal-plugin-random-math/references/images/v3-choice-rc2-official-branch.png',
+        'docs/VALIDATION-3.0.md': 'docs/VALIDATION-3.0.md',
+        'skills/letsgal-plugin-random-math/references/VALIDATION-3.0.md': 'skills/letsgal-plugin-random-math/references/VALIDATION-3.0.md',
+        'docs/CHOICE-UI-COMPATIBILITY.md': 'docs/CHOICE-UI-COMPATIBILITY.md',
+        'skills/letsgal-plugin-random-math/references/CHOICE-UI-COMPATIBILITY.md': 'skills/letsgal-plugin-random-math/references/CHOICE-UI-COMPATIBILITY.md',
+        'scripts/migrate-project.py': 'scripts/migrate-project.py',
+        'docs/MIGRATION-3.0.md': 'docs/MIGRATION-3.0.md',
+        'docs/examples-v3.json': 'docs/examples-v3.json',
+        'skills/letsgal-plugin-random-math/references/MIGRATION-3.0.md': 'skills/letsgal-plugin-random-math/references/MIGRATION-3.0.md',
+        'skills/letsgal-plugin-random-math/references/LEGACY-2.2.3-AI-GUIDE.md': 'skills/letsgal-plugin-random-math/references/LEGACY-2.2.3-AI-GUIDE.md',
         '开始使用.md': 'docs/AI-INTEGRATION.md',
+        '开始使用.html': 'docs/ai-install.html',
         '统一管理索引条目.md': 'docs/ai-integration/PLUGIN-INDEX.entry.md',
         'skills/letsgal-plugin-random-math/SKILL.md': 'skills/letsgal-plugin-random-math/SKILL.md',
         'skills/letsgal-plugin-random-math/references/AI-GUIDE.md': 'skills/letsgal-plugin-random-math/references/AI-GUIDE.md',
@@ -26,13 +45,16 @@ def build(target):
         'scripts/install-skill.py': 'scripts/install-skill.py',
         'scripts/select-host-guidance.py': 'scripts/select-host-guidance.py',
         'extension.json': 'extension.json',
-        '项目文件/docs/random-math/AI-GUIDE.md': 'docs/AI-GUIDE.md',
-        '项目文件/docs/random-math/AI-INTEGRATION.md': 'docs/AI-INTEGRATION.md',
         '待合并规则/AGENTS.append.md': 'docs/ai-integration/AGENTS.append.md',
         '待合并规则/CLAUDE.append.md': 'docs/ai-integration/CLAUDE.append.md',
         '待合并规则/random-math.mdc': 'docs/ai-integration/random-math.mdc',
         '给聊天AI的开场说明.md': 'docs/ai-integration/CHAT-START.md',
     }
+    # The fallback project route must carry the whole Skill, not a guide without its references.
+    files.update({
+        '项目文件/docs/random-math/' + name.removeprefix('skills/letsgal-plugin-random-math/'): relative
+        for name, relative in list(files.items()) if name.startswith('skills/letsgal-plugin-random-math/')
+    })
     installer = runpy.run_path(str(ROOT / 'scripts/install-skill.py'))
     data = {'plugin-skill-manifest.json': installer['manifest_bytes'](ROOT / 'skills/letsgal-plugin-random-math', ROOT)}
     expected = {name.removeprefix('skills/letsgal-plugin-random-math/') for name in files if name.startswith('skills/')}
@@ -43,7 +65,9 @@ def build(target):
         if source.is_symlink() or not source.is_file():
             raise ValueError(f'Expected regular file: {relative}')
         # Preserve Skill bytes so the bundled manifest also verifies after extraction.
-        data[name] = source.read_bytes() if name.startswith('skills/') else source.read_bytes().replace(b'\r\n', b'\n')
+        raw = source.read_bytes()
+        # PNG signatures contain CRLF; normalize only known text outside the Skill.
+        data[name] = raw.replace(b'\r\n', b'\n') if not name.startswith(('skills/', '项目文件/docs/random-math/')) and source.suffix in {'.md', '.json', '.py'} else raw
     with zipfile.ZipFile(target, 'x', zipfile.ZIP_DEFLATED) as bundle:
         for name in sorted(data):
             info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))

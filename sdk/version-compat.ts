@@ -7,11 +7,13 @@
  * Studio 加载链路与玩家壳都从这里 import。
  *
  * 语义:
- *   - 主版本必须相同 —— 大版本是破坏性变更的分界,高低都不放行
- *   - 主版本相同时按 `>=` 判定:扩展声明的版本 <= 当前版本才放行
+ *   - `>=` 和历史裸版本声明表示最低版本，允许跨主版本升级
+ *   - 2.x 宿主兼容旧模板生成的 `^1.x` SDK 声明
+ *   - 其他 `^` / `~` 保留各自的兼容范围上限，`*` 不限制版本
+ *   - 不支持的范围或无效声明保守拒绝，不截取首个数字后放行
  *
  * 也就是说 sdkVersion 表达的是"我至少需要这个版本"。老扩展声明
- * `>=1.0.0` 在 1.9.0 上照常能用;用了新 API 的扩展声明 `>=1.9.0`,
+ * `>=1.0.0` 在 2.0.0 上照常能用;用了新 API 的扩展声明 `>=1.9.0`,
  * 装到 1.5.0 上会被挡在加载之前,而不是跑起来才崩。
  */
 
@@ -75,15 +77,42 @@ export function isNewerVersion(candidate: string, base: string): boolean {
  * @param current    当前运行的 SDK 版本(= 引擎版本),如 "1.9.0-beta.1"
  */
 export function isSdkCompatible(sdkVersion: string, current: string): boolean {
-  const required = parseVersion(sdkVersion);
+  if (typeof sdkVersion !== "string" || typeof current !== "string") return false;
+  // SDK 既有契约将预发布版本按正式版比较。严格校验主体，避免错误文本被
+  // parseVersion 的宽松数字提取误认成合法范围；不改变其他调用方的解析行为。
+  const versionPattern = /^(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-[\da-zA-Z-]+(?:\.[\da-zA-Z-]+)*)?(?:\+[\da-zA-Z-]+(?:\.[\da-zA-Z-]+)*)?$/;
+  if (!versionPattern.test(current.trim())) return false;
   const running = parseVersion(current);
-  // 任一侧解析不了都保守判不兼容 —— 宁可拦住也别放进来崩
-  if (!required || !running) return false;
+  if (!running) return false;
+  const declaration = sdkVersion.trim().replace(/^≥/, ">=");
+  if (declaration === "*") return true;
+  const match = declaration.match(/^(>=|\^|~)?\s*(.+)$/);
+  if (!match) return false;
+  const [, operator, version] = match;
+  const parts = version.match(versionPattern);
+  if (!parts) return false;
+  const required = parseVersion(version);
+  if (!required) return false;
 
-  // 大版本必须一致
-  if (required.major !== running.major) return false;
+  // 先检查完整最低版本，2.0.0 满足 >=1.9.9，1.9.9 不满足 >=2.0.0。
+  const comparison = running.major - required.major
+    || running.minor - required.minor
+    || running.patch - required.patch;
+  if (comparison < 0) return false;
 
-  // 同主版本内按 ">=" 比:要求的版本不能高于当前
-  if (required.minor !== running.minor) return required.minor < running.minor;
-  return required.patch <= running.patch;
+  if (operator === "~") {
+    return running.major === required.major
+      && (parts[2] === undefined || running.minor === required.minor);
+  }
+  if (operator === "^") {
+    // SDK_VERSION 跟随产品版本从 1.x 升到 2.x，旧扩展模板默认生成 ^1.x。
+    // 为 2.x 明确保留这代 SDK 的加载兼容性；不据此放行未知的 3.x、
+    // 0.x 契约，也不忽略作者通过 ~ 指定的更窄范围。
+    if (running.major === 2 && required.major === 1) return true;
+    if (running.major !== required.major) return false;
+    if (required.major > 0 || parts[2] === undefined) return true;
+    if (running.minor !== required.minor) return false;
+    return required.minor > 0 || parts[3] === undefined || running.patch === required.patch;
+  }
+  return true;
 }

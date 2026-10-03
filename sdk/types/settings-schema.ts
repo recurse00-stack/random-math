@@ -153,7 +153,7 @@ export interface ColorField {
   label: string;
   description?: string;
   default?: string;
-  /** 允许调透明度。默认关闭。 */
+  /** 是否允许调透明度。默认开启；仅不透明业务显式设为 false。 */
   allowAlpha?: boolean;
   enabledWhen?: FieldEnableCondition;
 }

@@ -6,3 +6,4 @@ export * from "./settings-schema";
 export * from "./shortcut";
 export * from "./ui-ref";
 export * from "./database";
+export * from "./visual-ui";

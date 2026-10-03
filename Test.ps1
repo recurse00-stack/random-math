@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param([switch]$SkipBuild)
 $ErrorActionPreference='Stop'
 $run=Join-Path $PSScriptRoot ('.ai-work\tasks\validation\'+(Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')+'-'+[guid]::NewGuid().ToString('N').Substring(0,8))
@@ -24,10 +24,20 @@ Push-Location -LiteralPath $PSScriptRoot
 try {
     if(-not $SkipBuild){Invoke-Check 'build' 'npm.cmd' @('run','build')}
     Invoke-Check 'typecheck' 'node' @('node_modules/typescript/bin/tsc','--noEmit')
+    Invoke-Check 'sdk-compat-regression' 'node' @('_test/sdk-compat.test.mjs')
     Invoke-Check 'existing-logic' 'node' @('--import','./_test/register-sdk.mjs','_test/run-tests.mjs')
     Invoke-Check 'repair-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/repair.test.mjs')
     Invoke-Check 'deck-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/deck.test.mjs')
+    Invoke-Check 'v3-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/v3.test.mjs')
+    Invoke-Check 'continuity-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/continuity.test.mjs')
+    Invoke-Check 'audit-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/audit-regression.test.mjs')
+    Invoke-Check 'feedback-form-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/feedback-form.test.mjs')
+    Invoke-Check 'random-form-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/random-form.test.mjs')
+    Invoke-Check 'math-enhancement-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/math-enhancement.test.mjs')
     Invoke-Check 'postbuild-regression' 'node' @('_test/postbuild.test.mjs')
+    Invoke-Check 'migration-regression' 'python' @('-X','utf8','-B','_test/migration.test.py')
+    Invoke-Check 'skill-tools-regression' 'python' @('-X','utf8','-B','_test/skill-tools.test.py')
+    Invoke-Check 'package-regression' 'python' @('-X','utf8','-B','_test/package.test.py')
     $js=(Get-FileHash -LiteralPath 'dist/index.js' -Algorithm SHA256).Hash
     $mjs=(Get-FileHash -LiteralPath 'dist/index.mjs' -Algorithm SHA256).Hash
     if($js -ne $mjs){throw 'Build entry hashes differ'}
@@ -38,3 +48,4 @@ try {
     [pscustomobject]@{status='FAIL';run=$run;checks=@($results.ToArray());error=$_.Exception.Message} | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $run 'result.json') -Encoding UTF8
     throw
 } finally {Pop-Location}
+
