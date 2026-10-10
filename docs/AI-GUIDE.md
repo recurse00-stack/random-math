@@ -1,12 +1,12 @@
 # 抽选与数学增强 3.0.0 · AI 使用指南
 
-修订2026-10-03（sdk.1）。这是插件 Skill 的按需参考资料；AI知识入口是插件Skill根的 SKILL.md；本文位于其references/时向上一层查找。人工安装说明见同目录AI-INTEGRATION.md。插件ID `mixing-entropy.random-math`，模块ID `random-math`。创作者操作手册见USER-GUIDE。随机数不限六面：单个或批量操作设置min=1、max=N、digits=0并包含端点，即可生成1～N的整数；具体字段使用对应操作前缀。
+修订2026-10-10（mcp.1）。这是插件 Skill 的按需参考资料；AI知识入口是插件Skill根的 SKILL.md；本文位于其references/时向上一层查找。人工安装说明见同目录AI-INTEGRATION.md。插件ID `mixing-entropy.random-math`，模块ID `random-math`。创作者操作手册见USER-GUIDE。随机数不限六面：单个或批量操作设置min=1、max=N、digits=0并包含端点，即可生成1～N的整数；具体字段使用对应操作前缀。
 
 ## 1. 目标工程与资料路由
 
 核对工程实际启用版本、Studio完整版本及通道、SDK、有效章节／变量／Choice绑定样本。先确定实际插件Skill根。安装后的路由命令从Skill根运行 `python scripts/select-host-guidance.py --help`，随后按实际证据传参；完整解压发行包也在包根提供同名工具。缺失标UNKNOWN；只读取所选Stable或Beta资料。不猜最新版、不自行升级宿主。
 
-主要目标Studio 2.4.0-beta.2。开发SDK与目标Studio2.4.0-beta.2随附29文件一致；项目侧声明仅处理未随附且本插件未使用的导出，不提供新宿主能力。依赖版本保持。构建、类型检查、逻辑垫片不证明真实运行；各完整宿主版本及运行文件的证据分别记录，目标工程应核对对应验证范围。历史截图按原版本标注。历史鼠标回填仍疑似宿主问题，方向键＋Enter或完整手填后核对值，不能宣称已修复。
+现有3.0.0运行验收主要来自Studio 2.4.0-beta.2，开发SDK沿用该宿主随附版本。mcp.1新增正式版2.5.0／Beta 2.6.0-beta.1资料与操作路由，不代表新增宿主运行验收。Beta官方MCP可用且获准时按Skill的MCP专题操作；不支持或未启用时简短回退，仍按目标通道读取资料。构建、类型检查、工具调用及资料检查不证明播放、存读档或导出；实际覆盖见VALIDATION-3.0。历史截图按原版本标注，鼠标回填问题没有因此宣称修复。
 
 ## 2. 六入口与配置
 
@@ -57,13 +57,15 @@ fixed保存种子与进度，只保证建池后的同状态、条件和操作；
 
 使用internal.system.choice和项目原Choice绑定，originalIndex映射稳定候选ID。展示enabled且条件满足、有可用份数的候选，各一个按钮；**权重零也可主动选择**。无选项返回empty，不恢复条件排除项。
 
-展示前保存pending，选择时再次验证条件和份数；过期选择不扣除、不输出成功。关闭未选skipped；运行取消保留pending供恢复。重复回调受保护，已完成runImmediately不再次扣除。rc.5在2.4.0-beta.2实测条件失效后拒绝、同请求重开双击仅扣一份、调度回退再前进无重复扣除、等待时退出调试清理UI。展示中SL及其他字节／平台的证据单列于VALIDATION-3.0，不能由这些用例推断所有自定义主题或取消组合。
+展示前保存pending，选择时再次验证条件和份数；过期选择不扣除、不输出成功。关闭未选skipped；运行取消保留pending供恢复。关闭后的回调不再有效；重新展示同名请求有独立requestId，旧存档缺少该字段仍可恢复。重复回调受保护，已完成runImmediately不再次扣除。历史实测范围见VALIDATION-3.0，不能推断所有自定义主题、取消或存读档组合均已通过。
 
 输出后接剧情分支和pool-update，不内置任意变量修改或片段调用。同池多个待选点用不同requestKey。
 
 Choice显示跟随项目绑定；检查面板可只读显示宿主返回的绑定。长列表裁切需按人类资料CHOICE-UI-COMPATIBILITY.md调整项目副本；不得修改宿主安装文件、全局注入CSS或自动抢占插槽。fresh重新取随机值仍可碰巧同结果；固定进度不保证建池前读档或内容／条件改变后的相同结果。
 
 ## 5. 输出和世界状态边界
+
+configVersion表示初始化定义指纹，configSource记录来源；旧存档缺失时保留UNKNOWN，不由当前作者配置补造。检查面板会指出候选引用了不存在的池。旧单次取出仍忽略批量前缀；不能用新批量输出约定解释旧调用。
 
 schemaVersion=1；status=ok/skipped/empty/error；poolId；items[{id,label,value,quantity,data?}]；receiptId；remaining/reserved/available；errorCode/message；检查时details。放回池remaining/available=null。successVar在ok或skipped为true；抽取／选择后先检查status=ok再消费结果；若解析完整报告，再要求items非空。初始化、读取或调整可成功且items为空。
 
@@ -355,12 +357,9 @@ drawDecks/fixedResults旧字段保留。接管后旧调用与新调用读取同�
 |clamp__max|上限／变量公式|string，必填|"100"||op = "clamp"|
 <!-- PARAMETERS-END -->
 
-## 9. 交付与证据
+## 9. 编排后核对
 
-分别报告代码、自动化、真实Beta、真实Stable、候选完整性、外部发布；主体、AI Skill＋辅助安装、人类手册分别标注changed/verified-unchanged/missing。路由不是双宿主实测，安装不等于模型读取。当前验收以VALIDATION-3.0为准。SL从对应章节读档后直接推进；切换章节或运行检查器引发的预览重建不能当作同一存档状态。
+核对本次修改的调用、参数和变量绑定，读回后验证受影响的剧情路线，说明结果与未覆盖部分。编辑成功不证明播放、存读档或导出通过；历史覆盖见VALIDATION-3.0。测试SL时从对应章节读档后直接推进；切换章节或运行检查器引发的预览重建不能当作同一存档状态。
 
 来源：随包真实方法、原SDK、官方method/settings-schema/system-slots及目标工程样本。
 
-## rc.4 接续修复
-
-关闭后的Choice回调不再有效；重新展示同名请求有独立requestId，旧存档缺少该字段仍可恢复。新旧混用时旧单次取出继续忽略批量前缀。已有占用时重复初始化保留原池，重置／删除仍拒绝。检查面板指出候选引用不存在的池。configVersion是初始化定义指纹，configSource是来源；旧存档缺失时UNKNOWN，不由当前作者配置补造。sdkVersion声明最低要求>=1.21.0；当前编译SDK为2.4.0-beta.2，实际最低宿主未核定，Stable仍未验。

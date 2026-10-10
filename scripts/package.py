@@ -69,6 +69,9 @@ def archive(paths, generated=None):
     return buffer.getvalue()
 
 def build(output):
+    channel_manifest = ROOT / 'plugin-skill-manifest.json'
+    if channel_manifest.is_file() and json.loads(channel_manifest.read_bytes()).get('schema_version') == 2:
+        return runpy.run_path(str(ROOT / 'scripts/channel-package.py'))['build_packages'](output, DOCS)
     names = [f'random-math-v{VERSION}.zip', f'random-math-v{VERSION}-docs.zip']
     # Preflight every output, including checksums, before opening any file.
     for name in names + ['SHA256SUMS.txt']:

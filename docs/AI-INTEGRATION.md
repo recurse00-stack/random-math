@@ -1,104 +1,118 @@
 # 抽选与数学增强 · AI Skill 安装与使用说明
 
-适用插件：3.0.0。资料修订：2026-10-03（sdk.1）。
+适用插件：3.0.0。资料修订：2026-10-10（mcp.1）。
 
-这份说明供创作者阅读，介绍下载、安装、让 AI 使用资料和更新方法。给 AI 的功能规则已经整理为完整 Skill：入口是 SKILL.md，详细参数、示例和版本资料放在 references/ 中，按任务读取。无需把技术指南网页逐段复制给 AI。
+本说明供创作者阅读。给 AI 的功能规则是完整 Skill：SKILL.md 提供入口，references/ 保存按需读取的参数、案例和版本资料。安装 Skill 不会安装、启用或升级游戏插件。
 
-## 1. 下载哪一个包
+## 1. 选择正式版或 Beta
 
-- **完整插件包**：供 Studio 安装，另附 Skill、安装工具和手册。
-- **AI Skill 接入包**（文件名以 -ai-kit.zip 结尾）：供已经安装插件、只需给 AI 补充知识的创作者使用。
-- **人类手册**：介绍在 Studio 中配置和编排；离线网页可直接阅读。
-- **AI Skill 安装说明**（-ai-install.html）：就是本说明的离线版。
+按目标工程实际使用的 Studio 通道选择一份：
 
-完整解压 AI 接入包后，应看到：
+|目标 Studio|选择|AI 操作方式|
+|---|---|---|
+|正式版，目前资料参照 2.5.0|stable|当前已知无 MCP，直接使用原有流程|
+|Beta，目前资料参照 2.6.0-beta.1|beta|MCP 可用且获准时优先使用；未启用时简短回退|
+|旧 Beta，没有官方 MCP|beta|继续用该版本的资料与原有流程|
+
+这是资料选择，不是对应宿主的完整运行验收声明。插件运行版本仍为 3.0.0；资料修订和插件版本分别记录。无法确认宿主时先核完整版本，不按本机最新安装猜测其他作品。
+
+MCP 是 Studio 给 AI 的操作接口，Skill 是使用插件的知识。没有 MCP 也能用 Skill；Beta 未启用 MCP 时，只需简短说明便按原有方式继续，不反复要求接入。工程保存并关闭后可处理文件；工程打开时使用获准界面或官方工具，没有操作能力时先给出草稿。待批准、只读或拒绝状态继续遵守权限。
+
+## 2. 下载与解压
+
+已有插件时，下载文件名以 **-ai-kit.zip** 结尾的接入包。完整插件包也附带相同安装工具和两套资料。完整解压后保留目录结构：
 
 ~~~text
 extension.json
 plugin-skill-manifest.json
-开始使用.md
-开始使用.html
-skills/letsgal-plugin-random-math/
-    SKILL.md
-    references/
-    scripts/
+channels/stable/skills/letsgal-plugin-random-math/
+channels/beta/skills/letsgal-plugin-random-math/
+channels/<通道>/plugin-skill-manifest.json
+skill-profiles/legacy-sdk1.json
 scripts/install-skill.py
+scripts/skill-channels.py
 scripts/select-host-guidance.py
 scripts/migrate-project.py
 ~~~
 
-完整插件包中对应说明位于 docs/AI-INTEGRATION.md 和 docs/ai-install.html。保留整个解压目录；只下载 SKILL.md、脚本或 GitHub 的 Source code 压缩包不构成完整安装包。
+AI 接入包另有“开始使用.md / .html”。完整插件包见 docs/AI-INTEGRATION.md 和 docs/ai-install.html。只下载 SKILL.md 或单个脚本不构成完整安装包。
 
-## 2. 先预览，再安装
+## 3. 先预览，再安装
 
-需要 Python 3.9 或更新版本。在解压后的包根打开终端，运行：
-
-~~~text
-python scripts/install-skill.py
-~~~
-
-默认仅检测与预览。查看它识别的 Agent、实际用户目录、主 Skill、安装目标及现有文件差异。若未识别当前客户端，显式指定，例如：
+需要 Python 3.9 或更新版本。在解压包根运行，例如 Beta：
 
 ~~~text
-python scripts/install-skill.py --agent codex
+python scripts/install-skill.py --agent codex --channel beta
 ~~~
 
-确认预览路径属于实际运行 AI 的环境后，使用同一组参数加 --apply：
+正式版把 beta 换成 stable。Claude 可用 --agent claude；其他客户端可显式指定 --skills-root。也可用已确认的 --host-version 2.6.0-beta.1 选择通道；同时指定且冲突会停止。
+
+默认仅预览，不写文件。检查 target、channel、docs_revision、changes、backup_area 和 plan_id。复制此次 plan_id，首次安装执行：
 
 ~~~text
-python scripts/install-skill.py --agent codex --apply
+python scripts/install-skill.py --agent codex --channel beta --apply --plan <预览返回的plan_id>
 ~~~
 
-安装器支持的客户端选项可通过 --help 查看。自定义技能目录用 --skills-root，自定义用户主目录用 --user-root；在远程、WSL 或容器中使用 AI，就在对应环境安装。安装器不下载或升级 Studio、主 Skill、客户端及其依赖。
+路径和文件在预览后变化时，旧 plan_id 失效，重新预览。自定义用户目录用 --user-root；远程、WSL 或容器中的 AI，应在实际运行环境安装。安装器不下载主 Skill、Studio 或 MCP，不改账号、权限与客户端配置。
 
-## 3. 安装到哪里
+## 4. 安装位置和开始使用
 
-**已有 letsgal-authoring 主 Skill**：插件知识放入实际用户主目录的 .letsgal-authoring/plugins/mixing-entropy.random-math/3.0.0/，并更新 plugins/INDEX.md。主 Skill 按当前作品读取对应版本；公共主 Skill 文件不被替换。
+已有 letsgal-authoring 主 Skill 时，知识装入实际用户目录的 .letsgal-authoring/plugins/mixing-entropy.random-math/3.0.0/，索引记录通道和资料修订。没有主 Skill 才装入当前 Agent 的 skills/letsgal-plugin-random-math/。不会把插件知识写进公共主 Skill 包。
 
-**没有主 Skill**：安装器将完整 letsgal-plugin-random-math 文件夹安装到当前 Agent 的技能目录。可以独立使用，无需为了本插件额外安装主 Skill。
+同一路径只激活一份通道。主 Skill 与插件通道不符时先核目标并选择匹配的主 Skill，安装器不代为切换主 Skill或升级 Studio。旧插件版本、其他插件和个人偏好保留。
 
-两种方式都应保留 SKILL.md、references/ 和 scripts/。安装知识不等于在 Studio 工程启用插件；Studio 的安装启用步骤见人类手册第2章。
+安装后按客户端支持的方式刷新 Skill 或开启新会话，可告诉 AI：
 
-## 4. 让 AI 开始使用
+> 使用抽选与数学增强的插件 Skill，核对这个工程的实际版本，帮我配置一个二十面骰，将结果写入数值变量 dice。
 
-安装后开启该客户端的新会话，或者按其支持的方式刷新技能。告诉 AI 目标工程和需要完成的事情，例如：
+有主 Skill 时按用户插件索引读取；独立安装时可指定 letsgal-plugin-random-math。请 AI 核对实际读取路径、通道和资料修订。文件安装、当前 AI 读取、客户端自动发现、Studio 启用及游戏运行分别验证。
 
-> 请使用抽选与数学增强的插件 Skill。先核对这个工程启用的插件版本和 Studio 完整版本，再帮我做一个二十面骰，结果写入数值变量 dice；不要升级引擎。
+## 5. 更新、切换通道与恢复
 
-有主 Skill 时，提示它读取用户插件索引中的对应版本；独立安装时可明确指定 letsgal-plugin-random-math。请 AI 列出实际读到的 SKILL.md 路径和插件版本，再开始编排。看到技能名称、实际读到文件和剧本运行正确是不同步骤。
-
-更复杂的请求可以直接表达目的，例如“让奖池A的权重随好感度变化”“选择完成后确认消耗”。AI 会从 Skill 的参考文件中读取相关参数，不必预先加载所有资料。
-
-## 5. Stable 与 Beta 怎么选择
-
-Skill 按目标工程、实际 Studio 完整版本与通道、对应 SDK 和有效样本选择资料；不把本机 Beta 当成其他作品的默认版本。以下命令从完整解压包根运行，可让 AI 使用随包只读选择器：
+相同资料重复安装返回 UNCHANGED。同版本资料更新或切换通道也先预览；确认变更后，使用相同参数加 --update：
 
 ~~~text
-python scripts/select-host-guidance.py --project <目标工程> --studio-exe <实际Studio可执行文件> --sdk-root <目标SDK目录>
+python scripts/install-skill.py --agent codex --channel beta --apply --update --plan <预览返回的plan_id>
 ~~~
 
-安装后的 Skill 也带有该选择器：先进入实际Skill根再执行同一命令，或使用它的绝对脚本路径。不要在references/目录直接运行相对的scripts/路径。版本缺失或互相冲突会报告 UNKNOWN；先补齐信息，再处理依赖版本的字段。选择资料不代表已验证目标游戏能够播放、存档或导出。当前验证范围见随包 VALIDATION-3.0.md。
+安装器核验原文、保全旧目录与索引、提交后读回，并返回 backup。已知 sdk.1 原件可直接接续；个人改动或未知来源会报告冲突，保留原文等待比较。额外文件不会被删掉，新文件与个人文件撞名时停止。不要删除收据、改清单或强制覆盖来消除提示。
 
-## 6. 重复安装、升级与同版本资料更新
+备份放在 Skill 自动发现目录之外。恢复也先预览，使用安装返回的完整 backup 路径：
 
-相同内容重复安装会返回 UNCHANGED。安装新版本时保留旧版知识，按作品实际使用版本选择；索引修改前会备份，不删除其他插件条目。
+~~~text
+python scripts/install-skill.py --restore <backup路径>
+python scripts/install-skill.py --restore <backup路径> --apply --plan <恢复预览的plan_id>
+~~~
 
-同一路径已有不同内容时，安装器会报告冲突并停止，包括“插件版本相同、资料修订不同”的情况。先备份已有目录与索引，再比较差异，只合并确认属于本次更新的文件，保留自定义补充；也可以请维护该工程的 AI 协助完成此步骤。不要删除旧目录、强制覆盖或改清单绕过检查。资料修订不改变插件运行版本。
+恢复前会核对当前文件和索引；安装后已有编辑时停止，避免覆盖新内容。恢复保留替换前后的资料。安装新插件版本不会覆盖旧版本知识。
+
+## 6. 版本核对与工作范围
+
+随包只读选择器可帮助 AI 读取工程、完整 EXE 版本、对应 SDK 与样本：
+
+~~~text
+python scripts/select-host-guidance.py --project <工程> --studio-exe <实际Studio文件> --sdk-root <SDK目录> --skill-root channels/beta/skills/letsgal-plugin-random-math
+~~~
+
+选择器参数以 --help 为准；安装后也可在实际 Skill 根运行 scripts/select-host-guidance.py。缺失或冲突标 UNKNOWN，只暂停依赖该信息的工作。资料路由不证明播放、存档、导出通过；历史范围见 VALIDATION-3.0.md。
+
+官方 MCP 获准时，AI 可读取插件真实方法和设置、编辑池目录和相关剧本调用。作者配置不直接覆盖已开始游玩的池，也不会改变随机、占用凭证和存档规则。MCP 接入不是 If 缓存问题的修复。
 
 ## 7. 常见问题
 
-|现象|处理方法|
+|现象|处理|
 |---|---|
-|找不到 Python|先使用可运行 Python 3.9+ 的环境，或按当前客户端方式手工安装完整 Skill 文件夹|
-|AI 说没有看到 Skill|确认安装在运行 AI 的环境，刷新／新建会话，并提供实际 SKILL.md 路径|
-|提示文件哈希不一致或清单缺失|重新完整解压同一发行包，不混用不同版本的脚本和资料|
-|提示已有内容冲突|先备份并比较差异，保留未知文件，再明确合并|
-|路径越界、符号链接或重定向被拒绝|使用实际用户区内的普通目录，不用链接绕过保护|
-|AI 会用插件但 Studio 中没有入口|在目标工程启用插件，核对稳定ID mixing-entropy.random-math|
-|AI 的建议与工程实际参数不同|让它重新核对工程插件版本、路由资料和实际参数，保留未知项，不猜接口|
+|没有 MCP 或尚未启用|继续原流程，不必为 Skill 强制接入|
+|MCP 待批准、只读或被拒绝|遵守对应权限；可先做草稿，不换工具绕过|
+|未选择通道|补 --channel stable / beta，或已确认的 --host-version|
+|主 Skill 通道不符|核对目标工程并选择匹配主 Skill；不自动改变宿主|
+|预览过期|重新预览差异，使用新的 plan_id|
+|已有文件被修改或来源未知|保留文件，比较个人修改；不要强行替换|
+|哈希错误或清单缺失|完整重新解压同一个包，不混用修订|
+|链接、重定向或路径越界被拒绝|使用实际用户区的普通目录|
+|AI 看不到资料|核安装环境，刷新／新会话，并提供实际 SKILL.md 路径|
+|Studio 没有插件入口|在目标工程启用插件，核对 mixing-entropy.random-math|
 
-不支持 Skill 的聊天工具可以按需接收 SKILL.md 和它引用的相关文件。旧式项目规则模板也随包保留。采用此备用方式时，将AI接入包的“项目文件/docs/random-math/”整个目录复制到目标工程的docs/random-math/；它包含SKILL.md、references/与只读路由脚本。再比较并合并“待合并规则”中的适用模板，保留已有规则原文；不要只复制AI-GUIDE.md而遗漏参考文件。已经安装 Skill，无需再次添加重复规则。
+不支持 Skill 的工具可按需读取对应通道的完整 Skill 文件夹。AI 接入包的“项目文件/<通道>/docs/random-math/”是备用工程资料；选择一份完整复制到关闭并已保护的工程，再比较合并“待合并规则”中的模板。已安装 Skill 时无需添加重复规则。本包不提供 Studio 内置 AI 的自动注册。
 
-本包不提供 LetsGal 内置 AI 的自动注册功能；安装插件不会使内置 AI 自动获得这份知识。需要 AI 协助时，使用能够读取文件或 Skill 的工具。
-
-迁移工具与安装器相互独立。安装 Skill 不会迁移旧工程或修改存档；迁移时先阅读 MIGRATION-3.0.md，预览、备份后再应用。
+迁移工具仍随包提供，与 Skill 安装独立。旧工程转换前读 MIGRATION-3.0.md，先预览、备份，再按原文校验应用；安装资料不会迁移作品或修改存档。

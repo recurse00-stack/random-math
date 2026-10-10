@@ -8,7 +8,7 @@
 
 迁移工具scripts/migrate-project.py默认只读preview，apply/restore强制原文校验、外部全新备份和路径保护。实例与测试只用合成工程；完整覆盖和局限见MIGRATION-3.0。普通异常回滚不等于断电安全事务。
 
-当前主要宿主目标为2.4.0-beta.2；开发SDK与该宿主随附29文件一致（自报2.4.0-beta.2），清单最低要求>=1.21.0不变。资料路由、SDK类型、真实UI、播放器、存读档、导出、安装与模型读取分别验收。当前运行文件的高级反馈表单实测、此前69a16d运行文件的完整Studio／Windows案例、其他历史版本分别列于VALIDATION-3.0.md；原鼠标候选回填未证明修复。
+3.0.0运行验收的历史主要宿主为2.4.0-beta.2；开发SDK与该宿主随附29文件一致（自报2.4.0-beta.2），清单最低要求>=1.21.0不变。mcp.1资料分别参照Stable 2.5.0与Beta 2.6.0-beta.1，未改变SDK或运行程序。资料路由、SDK类型、真实UI、播放器、存读档、导出、安装与模型读取分别验收。当前运行文件的高级反馈表单实测、此前69a16d运行文件的完整Studio／Windows案例、其他历史版本分别列于VALIDATION-3.0.md；原鼠标候选回填未证明修复。
 
 ## SDK同步与完整源码构建
 
@@ -17,3 +17,11 @@ sdk/保留Studio官方同步内容，不手工补文件或把旧SDK倒回。当�
 Test.ps1包含6组SDK声明兼容回归；类型兜底不会屏蔽其他缺失模块，也不会放宽真实声明。SDK同步后先执行类型检查与完整构建，再核对运行产物；watch仅tsc，不能替代完整构建。源包包含这份项目声明、测试、完整官方SDK及构建配置。运行包继续由宿主提供SDK/React单实例，不把本地SDK打进程序。
 
 宣传页使用scripts/build-promo-preview.py从README和WORKSHOP生成内嵌图片HTML。说明与图片不改变游戏运行逻辑。
+
+## Stable / Beta Skill资料
+
+skill-profiles/分别维护两个通道的入口和版本规则；docs/维护共享参数、案例与人类说明。build-skill-channels.py从这些原文生成channels/和两层SHA256清单。修改共享资料后运行build-creator-docs.py同步离线HTML与通道引用，再检查两套Skill链接；不要只更新安装包中的单个文件。
+
+资料与安装工具的定向验证使用`python -X utf8 -B _test/skill-tools.test.py`、`python -X utf8 -B _test/skill-channels.test.py`及`python -X utf8 -B _test/package.test.py`。三组分别覆盖原安装/资料路由、新通道的事务更新/恢复、完整发行包。它们也纳入Test.ps1；只改资料时无需重建运行代码。
+
+mcp.1打包要求既有3.0.0运行哈希，产物名称带资料修订。AI包和完整包均提供稳定版与Beta载荷，实际安装只激活选定通道。有主Skill时更新用户插件知识库；没有时独立安装。所有更新先预览，按原文哈希保全备份和索引，新增修订使用新输出目录。工具与资料通过不等于客户端自动发现或新宿主运行通过。

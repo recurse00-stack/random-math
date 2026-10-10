@@ -8,6 +8,9 @@ import json
 ROOT = Path(__file__).resolve().parent.parent
 
 def build(target):
+    channel_manifest = ROOT / 'plugin-skill-manifest.json'
+    if channel_manifest.is_file() and json.loads(channel_manifest.read_bytes()).get('schema_version') == 2:
+        return runpy.run_path(str(ROOT / 'scripts/channel-package.py'))['build_ai'](target)
     # References are generated from the maintained docs. Do not ship stale copies.
     for name in ['AI-GUIDE.md', 'AI-INTEGRATION.md']:
         canonical = (ROOT / 'docs' / name).read_bytes().replace(b'\r\n', b'\n')

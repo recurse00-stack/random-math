@@ -23,7 +23,7 @@ def render(source, output, label):
     body = re.sub(r'src="([^"]+)"', image, body)
     if source.parent == ROOT:
         body = re.sub(r'href="docs/([^"]+)"', r'href="\1"', body)
-        body = re.sub(r'href="(skills/[^"]+|RELEASE-NOTES.md)"', r'href="../\1"', body)
+        body = re.sub(r'href="((?:skills|channels)/[^"]+|RELEASE-NOTES.md)"', r'href="../\1"', body)
     for target in re.findall(r'href="([^"]+)"', body):
         if not (output.parent / html.unescape(target).split('#')[0]).is_file():
             raise ValueError('Missing link: ' + target)

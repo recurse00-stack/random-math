@@ -1,0 +1,24 @@
+{
+  "files": {
+    "SKILL.md": "81a8536d60e55de7d945279b4dbf7f15e6d96dff2daff7acb9d833f3cb6b4bc1",
+    "references/AI-GUIDE.md": "6170694d937b5925a24e4bfe30352dcf6e51345a8e4904c7d057aac477667860",
+    "references/AI-INTEGRATION.md": "11ee5fe405617460daa5539ff991dd8044b85ade61e2ec61f5d764b47b741701",
+    "references/CHOICE-UI-COMPATIBILITY.md": "0d7d2026af843ee7adaf36cd8d5dce34f02d78f8ac91a303e99bc23c203a9247",
+    "references/LEGACY-2.2.3-AI-GUIDE.md": "590af9b7c9ea35482630145bcf7cfc5cd88bf7388f6b6d0e34f8a98bec47f819",
+    "references/MIGRATION-3.0.md": "631437e649df1eccc528f3ddd750a5bcd860c42ab87ab1e4409c528e326ab8eb",
+    "references/VALIDATION-3.0.md": "dbfbad677e7216013b2446fbb331f3a56181759826831935a1c1e4b7b9039388",
+    "references/compatibility/beta.md": "4de4e2b8230ac3a878e2056cba7b3d415fca78463c827ab92b318f4e0d75de62",
+    "references/compatibility/stable.md": "ae67d456e6525f61e0e756daf40fb028883d1d82b10de5eae9fb20414d2be826",
+    "references/examples-v3.json": "3d2a638bab9f1ce6c13f7e6312374c094348971fe5f2e44cf155e9ee9fd4b011",
+    "references/images/PROVENANCE.md": "2a4313bbc900671f8eb709c6492787213c5cf9e579401bb21d3c70ea08fbca5f",
+    "references/images/v3-choice-rc2-custom-longtext.png": "32f538ab6cfc11745035b9e386e95b48d9ca6ff6a3a38ca7b361f9b814363e0a",
+    "references/images/v3-choice-rc2-official-branch.png": "453e6b005a8e4e36169245762c2234ec498cb0f4a40e6a7dba4ff9efd66bb2b7",
+    "references/images/v3-choice-rc5-beta242-longtext.png": "717b96ac102a074da29e2bc59cbe99dcacf1e4275d3f1c221ebf99b10ec239dc",
+    "scripts/select-host-guidance.py": "ab5b1651deb8110812b673582e0af3474145e7adedee09894fb620564434352c"
+  },
+  "name": "letsgal-plugin-random-math",
+  "plugin_id": "mixing-entropy.random-math",
+  "schema_version": 1,
+  "skill_path": "skills/letsgal-plugin-random-math",
+  "version": "3.0.0"
+}

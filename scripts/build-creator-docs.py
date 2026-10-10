@@ -53,24 +53,31 @@ ai_page='<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="vie
 print('Built human Skill installation HTML; AI instructions remain in SKILL.md and references.')
 
 # Generated Skill references share the same maintained AI documentation.
-skill_refs = OUT.parent / "skills/letsgal-plugin-random-math/references"
-skill_refs.mkdir(parents=True, exist_ok=True)
-for name in ["AI-GUIDE.md", "AI-INTEGRATION.md", "MIGRATION-3.0.md", "CHOICE-UI-COMPATIBILITY.md", "VALIDATION-3.0.md", "LEGACY-2.2.3-AI-GUIDE.md", "examples-v3.json"]:
-    (skill_refs / name).write_bytes((OUT / name).read_bytes())
-# Keep image references readable when the Skill is installed separately.
-for page in skill_refs.glob("*.md"):
-    for relative in re.findall(r'!\[[^\]]*\]\((images/[^)]+)\)', page.read_text(encoding="utf-8")):
-        target = skill_refs / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes((OUT / relative).read_bytes())
-if (skill_refs / "images").is_dir():
-    (skill_refs / "images/PROVENANCE.md").write_bytes((OUT / "images/PROVENANCE.md").read_bytes())
-print("Synced standalone Skill reference files from maintained AI docs.")
+if (OUT.parent / 'skills/letsgal-plugin-random-math/SKILL.md').is_file():
+    skill_refs = OUT.parent / "skills/letsgal-plugin-random-math/references"
+    skill_refs.mkdir(parents=True, exist_ok=True)
+    for name in ["AI-GUIDE.md", "AI-INTEGRATION.md", "MIGRATION-3.0.md", "CHOICE-UI-COMPATIBILITY.md", "VALIDATION-3.0.md", "LEGACY-2.2.3-AI-GUIDE.md", "examples-v3.json"]:
+        (skill_refs / name).write_bytes((OUT / name).read_bytes())
+    # Keep image references readable when the Skill is installed separately.
+    for page in skill_refs.glob("*.md"):
+        for relative in re.findall(r'!\[[^\]]*\]\((images/[^)]+)\)', page.read_text(encoding="utf-8")):
+            target = skill_refs / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((OUT / relative).read_bytes())
+    if (skill_refs / "images").is_dir():
+        (skill_refs / "images/PROVENANCE.md").write_bytes((OUT / "images/PROVENANCE.md").read_bytes())
+    print("Synced standalone Skill reference files from maintained AI docs.")
 
-# The installed Skill must retain a standalone read-only guidance selector.
-skill_scripts = OUT.parent / "skills/letsgal-plugin-random-math/scripts"
-skill_scripts.mkdir(parents=True, exist_ok=True)
-(skill_scripts / "select-host-guidance.py").write_bytes(
-    (OUT.parent / "scripts/select-host-guidance.py").read_bytes()
-)
-print("Synced the read-only guidance selector into the installed Skill.")
+    # The installed Skill must retain a standalone read-only guidance selector.
+    skill_scripts = OUT.parent / "skills/letsgal-plugin-random-math/scripts"
+    skill_scripts.mkdir(parents=True, exist_ok=True)
+    (skill_scripts / "select-host-guidance.py").write_bytes(
+        (OUT.parent / "scripts/select-host-guidance.py").read_bytes()
+    )
+    print("Synced the read-only guidance selector into the installed Skill.")
+
+# Public channel profiles are independent of any private development Skill.
+if (OUT.parent / 'plugin-skill-manifest.json').is_file():
+    import runpy
+    runpy.run_path(str(OUT.parent / 'scripts/build-skill-channels.py'))['build']()
+    print('Synced independent stable/beta Skill payloads.')

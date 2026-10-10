@@ -10,6 +10,8 @@
 
 [开始使用](docs/USER-GUIDE.md) · [离线手册](docs/creator-guide.html) · [安装 AI Skill](docs/AI-INTEGRATION.md) · [旧工程升级](docs/MIGRATION-3.0.md)
 
+资料修订 **mcp.1** 提供独立的正式版／Beta AI Skill，以及带预览、备份和恢复的资料更新工具。插件运行版本仍为3.0.0；未提供或未启用MCP时，AI按原有方式继续。
+
 ## 从一个池，组织多种可能
 
 - **让概率随剧情改变。** 权重可以填写常量或数值变量公式；候选用布尔变量控制是否参与，筛选后按有效候选重新计算概率。
@@ -76,7 +78,7 @@
 |---|---|
 |学习安装、变量、完整案例和全部参数|[创作者手册](docs/USER-GUIDE.md) / [离线 HTML](docs/creator-guide.html)|
 |让 AI 协助编排|[AI Skill 安装与使用说明](docs/AI-INTEGRATION.md) / [离线说明](docs/ai-install.html)|
-|供 AI 读取插件规则与真实参数|[插件 SKILL.md](skills/letsgal-plugin-random-math/SKILL.md)|
+|供 AI 读取插件规则与真实参数|[正式版 Skill](channels/stable/skills/letsgal-plugin-random-math/SKILL.md) / [Beta Skill](channels/beta/skills/letsgal-plugin-random-math/SKILL.md)|
 |了解升级内容与适用范围|[版本说明](RELEASE-NOTES.md) / [验证范围](docs/VALIDATION-3.0.md)|
 
 AI Skill 随包提供，安装助手先检测与预览，遇到冲突会停止。有引擎主 Skill 时安装到用户插件知识区；没有主 Skill 时才独立安装。安装知识资料不会自动启用游戏插件。
@@ -85,6 +87,6 @@ AI Skill 随包提供，安装助手先检测与预览，遇到冲突会停止�
 
 允许读档重抽与同一进度固定可按玩法选择。固定池策略保存随机进度；读回建池前、修改条件或候选内容，不保证结果保持不变。“随机”也不保证连续两次一定不同。
 
-主要验证环境为 Studio **2.4.0-beta.2** 与 Windows，具体操作和存读档覆盖见[验证说明](docs/VALIDATION-3.0.md)。Stable 完整版本尚未核定，Web / Android 尚未验证。
+历史运行验证主要使用 Studio **2.4.0-beta.2** 与 Windows，具体操作和存读档覆盖见[验证说明](docs/VALIDATION-3.0.md)。当前资料参照 Stable 2.5.0 / Beta 2.6.0-beta.1，这两个宿主及 Web / Android 尚未新增插件运行验收。
 
 复杂条件可由外部系统计算为布尔变量；本插件管理抽取、选项和数值，不包含完整世界状态系统。

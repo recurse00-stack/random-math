@@ -6,6 +6,7 @@ ROOT = Path(__file__).absolute().parent.parent
 package = runpy.run_path(str(ROOT / 'scripts/package.py'))
 ai = runpy.run_path(str(ROOT / 'scripts/build-ai-kit.py'))
 installer = runpy.run_path(str(ROOT / 'scripts/install-skill.py'))
+channels = runpy.run_path(str(ROOT / 'scripts/skill-channels.py'))
 
 class PackageTests(unittest.TestCase):
     @classmethod
@@ -29,6 +30,10 @@ class PackageTests(unittest.TestCase):
                 for name in images:
                     raw = z.read(name)
                     source = ('skills/letsgal-plugin-random-math/' + name.removeprefix('项目文件/docs/random-math/')) if name.startswith('项目文件/docs/random-math/') else name
+                    for channel in ('stable', 'beta'):
+                        prefix = f'项目文件/{channel}/docs/random-math/'
+                        if name.startswith(prefix):
+                            source = f'channels/{channel}/skills/letsgal-plugin-random-math/' + name.removeprefix(prefix)
                     self.assertEqual(raw, (ROOT / source).read_bytes(), name)
                     # Raw host captures can retain a .png filename with JPEG bytes.
                     # Preserve originals; the HTML generator detects MIME from bytes.
@@ -59,12 +64,13 @@ class PackageTests(unittest.TestCase):
     def test_fallback_project_route_is_a_complete_skill(self):
         with zipfile.ZipFile(self.ai_path) as z:
             names = set(z.namelist())
-            prefix = 'skills/letsgal-plugin-random-math/'
-            for name in names:
-                if name.startswith(prefix):
-                    fallback = '项目文件/docs/random-math/' + name.removeprefix(prefix)
-                    self.assertIn(fallback, names)
-                    self.assertEqual(z.read(name), z.read(fallback))
+            for channel in ('stable', 'beta'):
+                prefix = f'channels/{channel}/skills/letsgal-plugin-random-math/'
+                for name in names:
+                    if name.startswith(prefix):
+                        fallback = f'项目文件/{channel}/docs/random-math/' + name.removeprefix(prefix)
+                        self.assertIn(fallback, names)
+                        self.assertEqual(z.read(name), z.read(fallback))
             guide = z.read(prefix + 'references/AI-GUIDE.md').decode('utf-8')
             self.assertIn('已初始化池同样生效', guide)
             for rule in ['待合并规则/AGENTS.append.md', '待合并规则/CLAUDE.append.md', '待合并规则/random-math.mdc']:
@@ -79,12 +85,14 @@ class PackageTests(unittest.TestCase):
                 for name in z.namelist():
                     self.assertFalse(name.startswith('/') or '..' in Path(name).parts)
                 z.extractall(folder)
-                identity, files = installer['checked_source'](folder / installer['SKILL_RELATIVE'], folder)
-                self.assertEqual(identity['version'], package['VERSION'])
-                self.assertEqual(len(files), len(package['SKILL_FILES']))
-                self.assertIn('references/examples-v3.json', files)
-                self.assertIn('references/images/v3-choice-rc5-beta242-longtext.png', files)
-                self.assertEqual(files, json.loads(z.read('plugin-skill-manifest.json'))['files'])
+                for channel in ('stable', 'beta'):
+                    source, identity, files, top = channels['payload'](installer, folder, channel)
+                    self.assertEqual(identity['version'], package['VERSION'])
+                    self.assertEqual(identity['channel'], channel)
+                    self.assertEqual(identity['docs_revision'], 'mcp.1')
+                    self.assertIn('references/examples-v3.json', files)
+                    self.assertIn('references/images/v3-choice-rc5-beta242-longtext.png', files)
+                    self.assertEqual('references/mcp-workflow.md' in files, channel == 'beta')
 
     def test_reader_text_has_no_internal_coordination_notes(self):
         forbidden = re.compile(r"本轮|用户(?:确认|批准|授权|要求)|助手(?:已完成|未修改|负责)|按用户转述|你我|主模型|凭据|执行策略|安全策略|尚未公开(?:提交|发布)|门禁INCOMPLETE|私有验收|external_authorization|this task", re.I)

@@ -29,6 +29,7 @@ try {
     Invoke-Check 'repair-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/repair.test.mjs')
     Invoke-Check 'deck-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/deck.test.mjs')
     Invoke-Check 'v3-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/v3.test.mjs')
+    Invoke-Check 'world-state-authority-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/authority.test.mjs')
     Invoke-Check 'continuity-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/continuity.test.mjs')
     Invoke-Check 'audit-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/audit-regression.test.mjs')
     Invoke-Check 'feedback-form-regression' 'node' @('--import','./_test/register-sdk.mjs','_test/feedback-form.test.mjs')
@@ -37,6 +38,7 @@ try {
     Invoke-Check 'postbuild-regression' 'node' @('_test/postbuild.test.mjs')
     Invoke-Check 'migration-regression' 'python' @('-X','utf8','-B','_test/migration.test.py')
     Invoke-Check 'skill-tools-regression' 'python' @('-X','utf8','-B','_test/skill-tools.test.py')
+    Invoke-Check 'skill-channels-regression' 'python' @('-X','utf8','-B','_test/skill-channels.test.py')
     Invoke-Check 'package-regression' 'python' @('-X','utf8','-B','_test/package.test.py')
     $js=(Get-FileHash -LiteralPath 'dist/index.js' -Algorithm SHA256).Hash
     $mjs=(Get-FileHash -LiteralPath 'dist/index.mjs' -Algorithm SHA256).Hash

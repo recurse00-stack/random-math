@@ -1,0 +1,22 @@
+{
+  "channels": {
+    "beta": {
+      "manifest": "channels/beta/plugin-skill-manifest.json",
+      "sha256": "d8b89c64363e939a59e2a696da57d80b51a46116741f37fe71903c7cc21b8857"
+    },
+    "stable": {
+      "manifest": "channels/stable/plugin-skill-manifest.json",
+      "sha256": "c6f84c483de74d0a09b7ba3efc0081ca2ee64a29bde6692a434badafa49a664b"
+    }
+  },
+  "docs_revision": "mcp.1",
+  "legacy": [
+    {
+      "manifest": "skill-profiles/legacy-sdk1.json",
+      "sha256": "2cf99ecf9bce9b6fb1773194b33dc4500f4ba3600c7aa60a5455e68a57195317"
+    }
+  ],
+  "plugin_id": "mixing-entropy.random-math",
+  "schema_version": 2,
+  "version": "3.0.0"
+}

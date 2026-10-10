@@ -11,6 +11,7 @@ import re
 import stat
 import tempfile
 import uuid
+import runpy
 
 ROOT = Path(__file__).absolute().parent.parent
 SKILL_RELATIVE = "skills/letsgal-plugin-random-math"
@@ -251,7 +252,7 @@ def copy_exclusive(source, target):
                 output.write(safe_path(Path(folder) / name).read_bytes())
 
 
-def install(source=None, skills_root=None, user_root=None, apply=False, agent=None,
+def install_legacy(source=None, skills_root=None, user_root=None, apply=False, agent=None,
             bundle_root=ROOT, environment=None):
     user_root = safe_path(Path.home() if user_root is None else user_root)
     bundle_root = safe_path(bundle_root)
@@ -313,6 +314,25 @@ def install(source=None, skills_root=None, user_root=None, apply=False, agent=No
     return result
 
 
+def install(source=None, skills_root=None, user_root=None, apply=False, agent=None,
+            bundle_root=ROOT, environment=None, channel=None, host_version=None,
+            update=False, plan=None, restore=None):
+    channel_api = runpy.run_path(str(Path(__file__).parent / "skill-channels.py"))
+    if restore is not None:
+        return channel_api["restore"](globals(), restore, apply=apply, plan=plan)
+    manifest = safe_path(Path(bundle_root) / "plugin-skill-manifest.json")
+    is_channel = manifest.is_file() and json.loads(manifest.read_bytes()).get("schema_version") == 2
+    if is_channel:
+        if source is not None:
+            raise ValueError("Channel packages select their checked source through --channel")
+        return channel_api["install"](globals(), bundle_root, skills_root=skills_root,
+            user_root=user_root, agent=agent, environment=environment, channel=channel,
+            host_version=host_version, apply=apply, update=update, plan=plan)
+    if channel is not None or host_version is not None or update or plan:
+        raise ValueError("This is a legacy package; use the complete channel update package")
+    return install_legacy(source, skills_root, user_root, apply, agent, bundle_root, environment)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, help="Override the packaged Skill directory")
@@ -320,6 +340,11 @@ def main():
     parser.add_argument("--skills-root", type=Path, help="Explicit Skill directory for this AI tool")
     parser.add_argument("--user-root", type=Path, help="Actual AI user's home (default: Path.home())")
     parser.add_argument("--apply", action="store_true", help="Install; omission only previews")
+    parser.add_argument("--channel", choices=("stable", "beta"), help="Target Studio channel")
+    parser.add_argument("--host-version", help="Verified full target Studio version; selects the channel")
+    parser.add_argument("--update", action="store_true", help="Apply the previewed update with a verified backup")
+    parser.add_argument("--plan", help="Exact plan_id returned by the current preview")
+    parser.add_argument("--restore", type=Path, help="Preview recovery from an installation backup; --apply --plan to restore")
     args = parser.parse_args()
     try:
         result = install(**vars(args))
