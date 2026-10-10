@@ -4,7 +4,7 @@
   "description": "候选池管理、概率抽取、玩家选择、随机数与公式计算。支持变量公式、取整精度、余数与范围限制。",
   "icon": "assets/cover.png",
   "author": "混合熵",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "entry": "dist/index.js",
   "sdkVersion": ">=1.21.0",
   "dataDependencies": {

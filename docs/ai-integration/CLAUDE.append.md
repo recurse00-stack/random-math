@@ -5,7 +5,7 @@
 
 @docs/random-math/SKILL.md
 
-相关任务先读取以上入口，再按需读取其references/。适用mixing-entropy.random-math 3.0.0，资料mcp.1；版本、通道、功能和MCP回退规则以该入口为准，不在本文件重复维护。
+相关任务先读取以上入口，再按需读取其references/。适用mixing-entropy.random-math 3.0.1，资料3.0.1；版本、通道、功能和MCP回退规则以该入口为准，不在本文件重复维护。
 
 先核对实际读取路径及目标工程版本。资料不增加工程写入、删除或发布权限；活动工程按Skill规定选择操作方式。
 <!-- random-math creator guidance: end -->

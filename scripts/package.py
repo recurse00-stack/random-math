@@ -35,7 +35,7 @@ DOCS = SKILL_FILES + AI_TOOLS + ['docs/images/v3-choice-rc2-custom-longtext.png'
         'docs/images/variables.png', 'docs/images/new-variable.png',
         'docs/images/method-picker.png', 'docs/images/candidate-table.png', 'docs/MIGRATION-2.0.md', 'docs/DEVELOPMENT.md', 'docs/WORKSHOP.md', 'docs/VALIDATION-2.2.md', 'docs/VALIDATION-2.2.1.md', 'docs/VALIDATION-2.2.2.md', 'docs/VALIDATION-2.2.3.md']
 
-DOCS += CURRENT_HOST_IMAGES + ['docs/images/promo-300-hero.png', 'docs/PROMO-ASSETS.md', 'docs/readme-preview.html', 'docs/workshop-preview.html']
+DOCS += CURRENT_HOST_IMAGES + ['docs/images/promo-301-hero.png', 'docs/PROMO-ASSETS.md', 'docs/readme-preview.html', 'docs/workshop-preview.html']
 
 def archive(paths, generated=None):
     generated = {} if generated is None else generated

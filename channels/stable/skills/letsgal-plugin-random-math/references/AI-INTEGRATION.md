@@ -1,6 +1,6 @@
 # 抽选与数学增强 · AI Skill 安装与使用说明
 
-适用插件：3.0.0。资料修订：2026-10-10（mcp.1）。
+适用插件：3.0.1。资料修订：2026-10-10（3.0.1）。
 
 本说明供创作者阅读。给 AI 的功能规则是完整 Skill：SKILL.md 提供入口，references/ 保存按需读取的参数、案例和版本资料。安装 Skill 不会安装、启用或升级游戏插件。
 
@@ -14,7 +14,7 @@
 |Beta，目前资料参照 2.6.0-beta.1|beta|MCP 可用且获准时优先使用；未启用时简短回退|
 |旧 Beta，没有官方 MCP|beta|继续用该版本的资料与原有流程|
 
-这是资料选择，不是对应宿主的完整运行验收声明。插件运行版本仍为 3.0.0；资料修订和插件版本分别记录。无法确认宿主时先核完整版本，不按本机最新安装猜测其他作品。
+这是资料选择，不是对应宿主的完整运行验收声明。3.0.1 沿用已验收的3.0.0运行实现，统一更新插件包和资料版本；历史实测仍按原版本记录。无法确认宿主时先核完整版本，不按本机最新安装猜测其他作品。
 
 MCP 是 Studio 给 AI 的操作接口，Skill 是使用插件的知识。没有 MCP 也能用 Skill；Beta 未启用 MCP 时，只需简短说明便按原有方式继续，不反复要求接入。工程保存并关闭后可处理文件；工程打开时使用获准界面或官方工具，没有操作能力时先给出草稿。待批准、只读或拒绝状态继续遵守权限。
 
@@ -57,7 +57,7 @@ python scripts/install-skill.py --agent codex --channel beta --apply --plan <预
 
 ## 4. 安装位置和开始使用
 
-已有 letsgal-authoring 主 Skill 时，知识装入实际用户目录的 .letsgal-authoring/plugins/mixing-entropy.random-math/3.0.0/，索引记录通道和资料修订。没有主 Skill 才装入当前 Agent 的 skills/letsgal-plugin-random-math/。不会把插件知识写进公共主 Skill 包。
+已有 letsgal-authoring 主 Skill 时，知识装入实际用户目录的 .letsgal-authoring/plugins/mixing-entropy.random-math/3.0.1/，索引记录通道和资料修订。没有主 Skill 才装入当前 Agent 的 skills/letsgal-plugin-random-math/。不会把插件知识写进公共主 Skill 包。
 
 同一路径只激活一份通道。主 Skill 与插件通道不符时先核目标并选择匹配的主 Skill，安装器不代为切换主 Skill或升级 Studio。旧插件版本、其他插件和个人偏好保留。
 

@@ -89,7 +89,7 @@ class PackageTests(unittest.TestCase):
                     source, identity, files, top = channels['payload'](installer, folder, channel)
                     self.assertEqual(identity['version'], package['VERSION'])
                     self.assertEqual(identity['channel'], channel)
-                    self.assertEqual(identity['docs_revision'], 'mcp.1')
+                    self.assertEqual(identity['docs_revision'], json.loads((ROOT / 'plugin-skill-manifest.json').read_bytes())['docs_revision'])
                     self.assertIn('references/examples-v3.json', files)
                     self.assertIn('references/images/v3-choice-rc5-beta242-longtext.png', files)
                     self.assertEqual('references/mcp-workflow.md' in files, channel == 'beta')

@@ -14,6 +14,8 @@ spec = importlib.util.spec_from_file_location("installer", ROOT / "scripts/insta
 installer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(installer)
 channels = runpy.run_path(str(ROOT / "scripts/skill-channels.py"))
+CURRENT = json.loads((ROOT / "extension.json").read_bytes())["version"]
+DOCS_REV = json.loads((ROOT / "plugin-skill-manifest.json").read_bytes())["docs_revision"]
 globals_ = channels["install"].__globals__
 paths = runpy.run_path(str(ROOT / "scripts/channel-package.py"))["channel_files"]()
 
@@ -54,7 +56,8 @@ class Channels(unittest.TestCase):
         manifest = json.loads((self.bundle / rel).read_bytes())
         skill = self.bundle / manifest["skill_path"]
         p = skill / "SKILL.md"
-        p.write_text(p.read_text(encoding="utf-8").replace("mcp.1", "mcp.test"), encoding="utf-8")
+        p.write_text(p.read_text(encoding="utf-8").replace(
+            f'docs_revision: "{DOCS_REV}"', 'docs_revision: "mcp.test"'), encoding="utf-8")
         manifest["docs_revision"] = top["docs_revision"] = "mcp.test"
         manifest["files"] = installer.file_hashes(skill)
         raw = channels["encoded"](manifest)
@@ -78,7 +81,7 @@ class Channels(unittest.TestCase):
         a = self.apply()
         self.assertEqual(a["mode"], "under-main")
         self.assertEqual(self.call(apply=True)["status"], "UNCHANGED")
-        self.assertIn("skill-channel:beta;docs:mcp.1", Path(a["index"]).read_text())
+        self.assertIn("skill-channel:beta;docs:" + DOCS_REV, Path(a["index"]).read_text())
         self.assertEqual(main.read_bytes(), original)
 
     def test_standalone_repeat_and_restore_fresh(self):
@@ -107,7 +110,7 @@ class Channels(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "--update"):
             self.call(apply=True, plan=preview["plan_id"])
         second = self.apply()
-        self.assertEqual(second["version"], "3.0.0")
+        self.assertEqual(second["version"], CURRENT)
         self.assertEqual(second["docs_revision"], "mcp.test")
         self.assertEqual((target / "my-notes.txt").read_bytes(), b"custom")
         self.restore(second)
@@ -126,13 +129,13 @@ class Channels(unittest.TestCase):
 
     def test_legacy_adoption_preserves_extra_file(self):
         self.main()
-        target = self.user / ".letsgal-authoring/plugins/mixing-entropy.random-math/3.0.0"
+        target = self.user / ".letsgal-authoring/plugins/mixing-entropy.random-math" / CURRENT
         for name in installer.REQUIRED_FILES:
             p = target / name
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text("Synthetic legacy reference", encoding="utf-8")
-        (target / "SKILL.md").write_text('---\nname: letsgal-plugin-random-math\ndescription: fixture\nmetadata:\n  plugin_id: mixing-entropy.random-math\n  plugin_version: "3.0.0"\n  docs_revision: "sdk.1"\n---\n', encoding="utf-8")
-        known = {"plugin_id": "mixing-entropy.random-math", "version": "3.0.0", "files": installer.file_hashes(target)}
+        (target / "SKILL.md").write_text('---\nname: letsgal-plugin-random-math\ndescription: fixture\nmetadata:\n  plugin_id: mixing-entropy.random-math\n  plugin_version: "'+CURRENT+'"\n  docs_revision: "sdk.1"\n---\n', encoding="utf-8")
+        known = {"plugin_id": "mixing-entropy.random-math", "version": CURRENT, "files": installer.file_hashes(target)}
         legacy = self.bundle / "skill-profiles/legacy-sdk1.json"
         legacy.write_bytes(channels["encoded"](known))
         top_path = self.bundle / "plugin-skill-manifest.json"

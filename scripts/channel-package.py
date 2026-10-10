@@ -1,4 +1,4 @@
-"""Deterministic allowlisted mcp.1 archives; uses existing 3.0.0 runtime bytes."""
+"""Deterministic allowlisted release archives; preserves the validated runtime bytes."""
 from pathlib import Path
 import hashlib
 import json
@@ -6,7 +6,7 @@ import runpy
 import zipfile
 
 ROOT = Path(__file__).absolute().parent.parent
-REV = "mcp.1"
+VERSION = json.loads((ROOT / "extension.json").read_bytes())["version"]
 
 
 def channel_files():
@@ -76,7 +76,7 @@ def build_ai(target):
 
 def build_packages(output, docs):
     output = Path(output)
-    names = [f"random-math-v3.0.0-{REV}.zip", f"random-math-v3.0.0-{REV}-docs.zip"]
+    names = [f"random-math-v{VERSION}.zip", f"random-math-v{VERSION}-docs.zip"]
     for p in [*names, "SHA256SUMS.txt"]:
         if (output / p).exists():
             raise FileExistsError("Existing release artifact: " + str(output / p))
@@ -84,7 +84,7 @@ def build_packages(output, docs):
     expected = "2c9ad6116c4053858b04da6038ea0daada2b85991d286b2f7fa79aa33a825565"
     for p in ("dist/index.js", "dist/index.mjs"):
         if hashlib.sha256((ROOT / p).read_bytes()).hexdigest() != expected:
-            raise ValueError("mcp.1 requires the unchanged published 3.0.0 runtime")
+            raise ValueError("This maintenance release requires the validated 3.0.0 runtime bytes")
     paths = {p for p in docs if not p.startswith("skills/")} | channel_files()
     data = read_files(paths)
     packages = {names[0]: zip_bytes({**data, **read_files(runtime)}), names[1]: zip_bytes(data)}
@@ -94,4 +94,4 @@ def build_packages(output, docs):
     for p, raw in packages.items():
         with (output / p).open("xb") as f:
             f.write(raw)
-    print("Built mcp.1 packages with unchanged 3.0.0 runtime")
+    print(f"Built {VERSION} packages with unchanged validated runtime")

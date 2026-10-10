@@ -1,15 +1,15 @@
 {
   "channel": "beta",
-  "docs_revision": "mcp.1",
+  "docs_revision": "3.0.1",
   "files": {
-    "SKILL.md": "fbecae9b1058d201aa0af7871bda2772e9ef8765df76bd930cb2972aadbbe674",
-    "references/AI-GUIDE.md": "349a1cc7d264f9d2f2d5ff504a6ee44a385c791ad017e1117839472829a76c46",
-    "references/AI-INTEGRATION.md": "2acbbda227e10d515d98e305982758cb9af69fb5c770e2ec629d252d20879359",
+    "SKILL.md": "ddfec56ffd9fd55a7e338ea2e498ed299b2e35bd10ab3f8f878cc7dbd35dc6bf",
+    "references/AI-GUIDE.md": "ee01b94436297879ba54bfb87846d16b421becd8e26e61825d94faf9e795098d",
+    "references/AI-INTEGRATION.md": "99a57923ec434fe0acbee9f41f97376857505d15edf040a549b9ce36ad9320b3",
     "references/CHOICE-UI-COMPATIBILITY.md": "0d7d2026af843ee7adaf36cd8d5dce34f02d78f8ac91a303e99bc23c203a9247",
     "references/LEGACY-2.2.3-AI-GUIDE.md": "c6af06cfbf094bae9ee4c88a516d4a83b42f9f22bc4fe9abeecbbf97689fa22a",
-    "references/MIGRATION-3.0.md": "3629d51a347eec18286d25a878b1d530f39c9c63c7213f0f5c5abced8aa722da",
-    "references/VALIDATION-3.0.md": "e38e7cb423710ed7e5d9e7c6a150aca152bde1528d105cf51e1ec563151fa99d",
-    "references/compatibility/beta.md": "16eaf23881281584ed955fdb7a198af0ac3fcd5afd1a82cafc3bbdf909923cbb",
+    "references/MIGRATION-3.0.md": "7dab8512f3f321b3b6bb9db21dbfed20871eb1aec6fa64c9f23fecda92b74a76",
+    "references/VALIDATION-3.0.md": "a5b93a47b8ba67d691a2d8573de429be5dd6c5f0094d57b19ac5a086b48b1dc8",
+    "references/compatibility/beta.md": "8d63624792ed031d562e39d6e5c2a22aff0ef0fcecda288a45aaa1550e607529",
     "references/examples-v3.json": "3d2a638bab9f1ce6c13f7e6312374c094348971fe5f2e44cf155e9ee9fd4b011",
     "references/images/PROVENANCE.md": "2a4313bbc900671f8eb709c6492787213c5cf9e579401bb21d3c70ea08fbca5f",
     "references/images/v3-choice-rc2-custom-longtext.png": "32f538ab6cfc11745035b9e386e95b48d9ca6ff6a3a38ca7b361f9b814363e0a",
@@ -22,5 +22,5 @@
   "plugin_id": "mixing-entropy.random-math",
   "schema_version": 1,
   "skill_path": "channels/beta/skills/letsgal-plugin-random-math",
-  "version": "3.0.0"
+  "version": "3.0.1"
 }

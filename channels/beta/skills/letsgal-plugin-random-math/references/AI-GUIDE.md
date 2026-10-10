@@ -1,12 +1,12 @@
-# 抽选与数学增强 3.0.0 · AI 使用指南
+# 抽选与数学增强 3.0.1 · AI 使用指南
 
-修订2026-10-10（mcp.1）。这是插件 Skill 的按需参考资料；AI知识入口是插件Skill根的 SKILL.md；本文位于其references/时向上一层查找。人工安装说明见同目录AI-INTEGRATION.md。插件ID `mixing-entropy.random-math`，模块ID `random-math`。创作者操作手册见USER-GUIDE。随机数不限六面：单个或批量操作设置min=1、max=N、digits=0并包含端点，即可生成1～N的整数；具体字段使用对应操作前缀。
+修订2026-10-10（3.0.1）。这是插件 Skill 的按需参考资料；AI知识入口是插件Skill根的 SKILL.md；本文位于其references/时向上一层查找。人工安装说明见同目录AI-INTEGRATION.md。插件ID `mixing-entropy.random-math`，模块ID `random-math`。创作者操作手册见USER-GUIDE。随机数不限六面：单个或批量操作设置min=1、max=N、digits=0并包含端点，即可生成1～N的整数；具体字段使用对应操作前缀。
 
 ## 1. 目标工程与资料路由
 
 核对工程实际启用版本、Studio完整版本及通道、SDK、有效章节／变量／Choice绑定样本。先确定实际插件Skill根。安装后的路由命令从Skill根运行 `python scripts/select-host-guidance.py --help`，随后按实际证据传参；完整解压发行包也在包根提供同名工具。缺失标UNKNOWN；只读取所选Stable或Beta资料。不猜最新版、不自行升级宿主。
 
-现有3.0.0运行验收主要来自Studio 2.4.0-beta.2，开发SDK沿用该宿主随附版本。mcp.1新增正式版2.5.0／Beta 2.6.0-beta.1资料与操作路由，不代表新增宿主运行验收。Beta官方MCP可用且获准时按Skill的MCP专题操作；不支持或未启用时简短回退，仍按目标通道读取资料。构建、类型检查、工具调用及资料检查不证明播放、存读档或导出；实际覆盖见VALIDATION-3.0。历史截图按原版本标注，鼠标回填问题没有因此宣称修复。
+3.0.1沿用3.0.0运行字节，保留其Studio 2.4.0-beta.2历史验收；2026-10-10又在2.6.0-beta.1完成MCP编排、代表性运行、Windows导出与占用态存读档检查。3.0.1自身的清单与资料核验另记，不把这些结果扩大为全部场景覆盖。开发SDK保持原版本；Stable 2.5.0运行兼容仍未知。Beta官方MCP可用且获准时按Skill的MCP专题操作；不支持或未启用时简短回退，仍按目标通道读取资料。构建、类型检查、工具调用及资料检查不证明播放、存读档或导出；实际覆盖见VALIDATION-3.0。历史截图按原版本标注，鼠标回填问题没有因此宣称修复。
 
 ## 2. 六入口与配置
 

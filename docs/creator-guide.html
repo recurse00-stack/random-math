@@ -4,7 +4,7 @@
 aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600px){aside .toc{columns:1}main{padding:24px 16px}h1{font-size:25px}th,td{padding:6px}}
 @media print{aside,dialog,.edition{display:none!important}main{margin:0;padding:0;max-width:none}body{background:white;font-size:10pt}h1{font-size:23pt}h2{font-size:17pt}h3{font-size:13pt}h2,h3{break-after:avoid}tr,img,pre{break-inside:avoid}table{font-size:9pt}img{max-height:145mm;object-fit:contain}a{color:inherit}mark{background:none}}
 .search-actions{display:flex;gap:5px;flex-wrap:wrap}.search-actions button{margin:6px 0;padding:7px 9px}aside button:disabled,aside input:disabled{opacity:.45;cursor:not-allowed}.jump-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:13px}.jump-row input{width:78px;padding:7px}.jump-row button{margin:4px 0}#result{margin:8px 0}mark.current{background:#ffa64b;outline:2px solid #8a4100;outline-offset:2px}dialog#searchDialog{width:1050px;max-height:90vh;padding:22px;color:#243431;background:#fffefb}#searchDialog h2{border:0;padding:0;margin:0;font-size:21px;line-height:1.5}#searchDialog header{display:flex;gap:14px;justify-content:space-between;align-items:start}#searchDialog button{float:none;cursor:pointer;border:1px solid #bccfc5;background:#f3f7f3;color:#174f42;border-radius:5px}#closeResults{flex-shrink:0}#searchDialog .search-layout{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:18px}#hitList{max-height:60vh;overflow:auto;padding:3px}#hitList .hit-item{display:block;text-align:left;width:100%;margin:0 0 9px;padding:10px 12px;line-height:1.6}#hitList .hit-item span{display:block;font-size:13px;margin-top:5px;overflow-wrap:anywhere}#hitList .hit-item[aria-pressed=true]{background:#dceee2;border:2px solid #176c5b}#previewTitle{font-size:18px;margin:0 0 9px;line-height:1.7}#previewLocation{font-size:13px;color:#64786e}#previewText{padding:16px;background:#f1f5ee;border-left:3px solid #176c5b;overflow-wrap:anywhere;white-space:pre-wrap;max-height:40vh;overflow:auto}#goPreview{padding:10px 15px}#searchDialog .hint{font-size:13px;color:#64786e;margin:8px 0}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #d69b21;outline-offset:2px}@media(max-width:700px){#searchDialog .search-layout{grid-template-columns:1fr;gap:12px}#hitList{max-height:28vh}#previewText{max-height:20vh}dialog#searchDialog{padding:14px;width:96vw}#searchDialog h2{font-size:18px}#searchDialog header button{padding:7px}}@media print{mark.current{outline:none}dialog#searchDialog{display:none!important}}
-</style></head><body><aside><h2>抽选与数学增强</h2><p>创作者使用手册<br>插件 3.0.0 · 2026-10-10</p><label for="search">查找正文</label><input id="search" type="search" placeholder="例如：输出列、读档、批量"><div class="search-actions"><button id="find">查找</button><button id="previous">上一处</button><button id="next">下一处</button><button id="openResults">结果与预览</button><button id="print">打印</button></div><div class="jump-row"><label for="hitNumber">跳到第几处</label><input id="hitNumber" type="number" min="1" step="1"><button id="jump">跳转</button></div><div id="result" role="status" aria-live="polite"></div><div class="toc">
+</style></head><body><aside><h2>抽选与数学增强</h2><p>创作者使用手册<br>插件 3.0.1 · 2026-10-10</p><label for="search">查找正文</label><input id="search" type="search" placeholder="例如：输出列、读档、批量"><div class="search-actions"><button id="find">查找</button><button id="previous">上一处</button><button id="next">下一处</button><button id="openResults">结果与预览</button><button id="print">打印</button></div><div class="jump-row"><label for="hitNumber">跳到第几处</label><input id="hitNumber" type="number" min="1" step="1"><button id="jump">跳转</button></div><div id="result" role="status" aria-live="polite"></div><div class="toc">
 <ul>
 <li><a href="#1">1. 六个入口与基本概念</a></li>
 <li><a href="#2">2. 安装、启用与准备变量</a><ul>
@@ -41,7 +41,7 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 </ul>
 </div>
 </aside><main><div class="edition">创作者教程 · 离线阅读版 · 点击截图可放大</div><h1 id="_1">抽选与数学增强 · 创作者使用手册</h1>
-<p>插件：<strong>3.0.0</strong>。手册修订：2026-10-10（mcp.1）。</p>
+<p>插件：<strong>3.0.1</strong>。手册修订：2026-10-10（3.0.1）。</p>
 <p>本手册介绍如何在剧本中使用随机数、抽取池、玩家选项与计算。第一次使用可从第2章准备变量，再按完整案例编排；AI Skill 的安装和使用见随包《AI Skill 安装与使用说明》。</p>
 <h2 id="1">1. 六个入口与基本概念</h2>
 <table>
@@ -91,7 +91,7 @@ aside h2{color:#e4f0e9;margin:0 0 12px;padding:0;border:0} @media(max-width:600p
 <h2 id="2">2. 安装、启用与准备变量</h2>
 <ol>
 <li>获取完整插件ZIP。已有作品先复制整个工程和升级前存档，保存旧插件包。</li>
-<li>在Studio扩展管理中按当前宿主支持的导入方式添加插件包，并在<strong>目标工程</strong>启用“抽选与数学增强”；核对ID <code>mixing-entropy.random-math</code> 和实际版本 <code>3.0.0</code>。下载文件不等于工程已经启用。</li>
+<li>在Studio扩展管理中按当前宿主支持的导入方式添加插件包，并在<strong>目标工程</strong>启用“抽选与数学增强”；核对ID <code>mixing-entropy.random-math</code> 和实际版本 <code>3.0.1</code>。下载文件不等于工程已经启用。</li>
 <li>打开扩展设置，在池目录填写池，再在候选目录填写所属池ID与候选ID。已有旧方法仍执行，默认不出现在新建列表；需要查看时可打开“显示旧版入口”。</li>
 <li>在工程变量面板提前声明输出变量。文本结果用文本变量，数字结果用数值变量；JSON数组、候选ID、凭证、报告和错误都用文本；成功用布尔。不能把结果和状态写进同一个变量。</li>
 <li>在剧本中添加扩展方法卡片，选六入口之一，然后选择操作并填写当前显示字段。需要后续分支判断时，打开高级执行反馈，绑定结果状态；执行后先判断状态，再使用结果或跳转剧情。四项反馈都可不填，但不填写时应自行安排抽空、失败或取消的处理流程。</li>

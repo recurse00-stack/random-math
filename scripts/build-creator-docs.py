@@ -53,7 +53,9 @@ ai_page='<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="vie
 print('Built human Skill installation HTML; AI instructions remain in SKILL.md and references.')
 
 # Generated Skill references share the same maintained AI documentation.
-if (OUT.parent / 'skills/letsgal-plugin-random-math/SKILL.md').is_file():
+channel_manifest = OUT.parent / 'plugin-skill-manifest.json'
+uses_channels = channel_manifest.is_file() and json.loads(channel_manifest.read_bytes()).get('schema_version') == 2
+if not uses_channels and (OUT.parent / 'skills/letsgal-plugin-random-math/SKILL.md').is_file():
     skill_refs = OUT.parent / "skills/letsgal-plugin-random-math/references"
     skill_refs.mkdir(parents=True, exist_ok=True)
     for name in ["AI-GUIDE.md", "AI-INTEGRATION.md", "MIGRATION-3.0.md", "CHOICE-UI-COMPATIBILITY.md", "VALIDATION-3.0.md", "LEGACY-2.2.3-AI-GUIDE.md", "examples-v3.json"]:

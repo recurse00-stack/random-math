@@ -1,4 +1,4 @@
-"""Generate independent stable/beta payloads from maintained 3.0.0 documentation."""
+"""Generate independent stable/beta payloads from maintained 3.0.1 documentation."""
 from pathlib import Path
 import hashlib
 import json
@@ -6,7 +6,7 @@ import runpy
 
 ROOT = Path(__file__).absolute().parent.parent
 NAME = "letsgal-plugin-random-math"
-REVISION = "mcp.1"
+REVISION = "3.0.1"
 REFERENCES = ["AI-GUIDE.md", "AI-INTEGRATION.md", "MIGRATION-3.0.md", "CHOICE-UI-COMPATIBILITY.md",
               "VALIDATION-3.0.md", "LEGACY-2.2.3-AI-GUIDE.md", "examples-v3.json"]
 IMAGES = ["PROVENANCE.md", "v3-choice-rc5-beta242-longtext.png", "v3-choice-rc2-official-branch.png",
@@ -21,8 +21,8 @@ def build(root=ROOT):
     root = Path(root)
     installer = runpy.run_path(str(root / "scripts/install-skill.py"))
     ext = json.loads((root / "extension.json").read_bytes())
-    if ext["id"] != "mixing-entropy.random-math" or ext["version"] != "3.0.0":
-        raise ValueError("This profile set describes the 3.0.0 runtime")
+    if ext["id"] != "mixing-entropy.random-math" or ext["version"] != "3.0.1":
+        raise ValueError("This profile set describes the 3.0.1 release")
     top = {"schema_version": 2, "plugin_id": ext["id"], "version": ext["version"],
            "docs_revision": REVISION, "channels": {}, "legacy": []}
     for channel in ("stable", "beta"):

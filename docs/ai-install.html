@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>抽选与数学增强 · AI Skill 安装与使用说明</title><style>body{max-width:1100px;margin:auto;padding:32px 20px;font:16px/1.8 system-ui,"Microsoft YaHei",sans-serif;color:#243431;background:#fffefb}h2{margin-top:40px;color:#145c4d}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ccd8cf;padding:9px;text-align:left;overflow-wrap:anywhere}th,pre{background:#edf3ef}pre{padding:18px;white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}a{color:#176c5b}</style><h1 id="ai-skill">抽选与数学增强 · AI Skill 安装与使用说明</h1>
-<p>适用插件：3.0.0。资料修订：2026-10-10（mcp.1）。</p>
+<p>适用插件：3.0.1。资料修订：2026-10-10（3.0.1）。</p>
 <p>本说明供创作者阅读。给 AI 的功能规则是完整 Skill：SKILL.md 提供入口，references/ 保存按需读取的参数、案例和版本资料。安装 Skill 不会安装、启用或升级游戏插件。</p>
 <h2 id="1-beta">1. 选择正式版或 Beta</h2>
 <p>按目标工程实际使用的 Studio 通道选择一份：</p>
@@ -29,7 +29,7 @@
 </tr>
 </tbody>
 </table>
-<p>这是资料选择，不是对应宿主的完整运行验收声明。插件运行版本仍为 3.0.0；资料修订和插件版本分别记录。无法确认宿主时先核完整版本，不按本机最新安装猜测其他作品。</p>
+<p>这是资料选择，不是对应宿主的完整运行验收声明。3.0.1 沿用已验收的3.0.0运行实现，统一更新插件包和资料版本；历史实测仍按原版本记录。无法确认宿主时先核完整版本，不按本机最新安装猜测其他作品。</p>
 <p>MCP 是 Studio 给 AI 的操作接口，Skill 是使用插件的知识。没有 MCP 也能用 Skill；Beta 未启用 MCP 时，只需简短说明便按原有方式继续，不反复要求接入。工程保存并关闭后可处理文件；工程打开时使用获准界面或官方工具，没有操作能力时先给出草稿。待批准、只读或拒绝状态继续遵守权限。</p>
 <h2 id="2">2. 下载与解压</h2>
 <p>已有插件时，下载文件名以 <strong>-ai-kit.zip</strong> 结尾的接入包。完整插件包也附带相同安装工具和两套资料。完整解压后保留目录结构：</p>
@@ -55,7 +55,7 @@ scripts/migrate-project.py
 </code></pre>
 <p>路径和文件在预览后变化时，旧 plan_id 失效，重新预览。自定义用户目录用 --user-root；远程、WSL 或容器中的 AI，应在实际运行环境安装。安装器不下载主 Skill、Studio 或 MCP，不改账号、权限与客户端配置。</p>
 <h2 id="4">4. 安装位置和开始使用</h2>
-<p>已有 letsgal-authoring 主 Skill 时，知识装入实际用户目录的 .letsgal-authoring/plugins/mixing-entropy.random-math/3.0.0/，索引记录通道和资料修订。没有主 Skill 才装入当前 Agent 的 skills/letsgal-plugin-random-math/。不会把插件知识写进公共主 Skill 包。</p>
+<p>已有 letsgal-authoring 主 Skill 时，知识装入实际用户目录的 .letsgal-authoring/plugins/mixing-entropy.random-math/3.0.1/，索引记录通道和资料修订。没有主 Skill 才装入当前 Agent 的 skills/letsgal-plugin-random-math/。不会把插件知识写进公共主 Skill 包。</p>
 <p>同一路径只激活一份通道。主 Skill 与插件通道不符时先核目标并选择匹配的主 Skill，安装器不代为切换主 Skill或升级 Studio。旧插件版本、其他插件和个人偏好保留。</p>
 <p>安装后按客户端支持的方式刷新 Skill 或开启新会话，可告诉 AI：</p>
 <blockquote>
